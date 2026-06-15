@@ -1,8 +1,8 @@
 // WebSocket bağlantı yönetimi: otomatik yeniden bağlanma (exponential backoff),
 // durum bildirimi, mesaj gönderimi. Parse işi parser.ts'e delege edilir.
 
-import { parseMessage } from './parser'
-import type { ConnectionStatus, IncomingMessage, OutgoingCommand } from '../types'
+import { deserialize, serializeCommand } from '../packets'
+import type { CommandRequest, ConnectionStatus, IncomingMessage } from '../types'
 
 /** Mock ve test için yeterli minimal WebSocket arayüzü. */
 export interface SocketLike {
@@ -66,10 +66,11 @@ export class TelemetryConnection {
     this.onStatus('disconnected')
   }
 
-  send(command: OutgoingCommand): boolean {
+  /** Komut paketini JSON'a serialize edip gönderir. */
+  send(command: CommandRequest): boolean {
     if (this.socket === null) return false
     try {
-      this.socket.send(JSON.stringify(command))
+      this.socket.send(serializeCommand(command))
       return true
     } catch {
       return false
@@ -87,7 +88,7 @@ export class TelemetryConnection {
     }
     socket.onmessage = (ev) => {
       if (typeof ev.data !== 'string') return
-      const result = parseMessage(ev.data)
+      const result = deserialize(ev.data)
       if (result.ok) this.onMessage(result.value)
     }
     socket.onerror = () => {

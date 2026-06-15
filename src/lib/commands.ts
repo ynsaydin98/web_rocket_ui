@@ -1,16 +1,11 @@
 // Komut akışı denetleyicisi: komut üretir, ACK bekler, zaman aşımını yönetir
 // ve sonucu store'a yansıtır. Ağ katmanından bağımsızdır (send enjekte edilir).
 
+import { buildCommand } from '../packets'
 import type { AppState, Store } from './store'
-import type { CommandAck, CommandName, OutgoingCommand } from '../types'
+import type { CommandAck, CommandName, CommandRequest } from '../types'
 
-export type SendFn = (command: OutgoingCommand) => boolean
-
-let counter = 0
-function nextCommandId(): string {
-  counter += 1
-  return `cmd-${Date.now()}-${counter}`
-}
+export type SendFn = (command: CommandRequest) => boolean
 
 export class CommandController {
   private timer: ReturnType<typeof setTimeout> | null = null
@@ -24,11 +19,7 @@ export class CommandController {
   issue(command: CommandName): void {
     if (this.store.getState().command.pending !== null) return
 
-    const message: OutgoingCommand = {
-      type: 'command',
-      commandId: nextCommandId(),
-      command,
-    }
+    const message = buildCommand(command)
 
     if (!this.send(message)) {
       this.store.setState((s) => ({

@@ -8,8 +8,8 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react'
+import { WS_URL } from '../config'
 import { CommandController } from '../lib/commands'
-import { MockSocket } from '../lib/mockServer'
 import { SequenceController } from '../lib/sequence'
 import {
   appendSample,
@@ -17,7 +17,7 @@ import {
   Store,
   type AppState,
 } from '../lib/store'
-import { TelemetryConnection, type SocketFactory } from '../lib/websocket'
+import { TelemetryConnection } from '../lib/websocket'
 
 export interface Services {
   store: Store<AppState>
@@ -29,15 +29,11 @@ export interface Services {
 function createServices(): Services {
   const store = new Store<AppState>(createInitialState())
 
-  const wsUrl = import.meta.env.VITE_WS_URL ?? ''
-  const factory: SocketFactory | undefined =
-    wsUrl === '' ? () => new MockSocket() : undefined
-
   let commands!: CommandController
 
+  // Veriler gerçek WebSocket sunucusundan (WS_URL) JSON olarak gelir.
   const connection = new TelemetryConnection({
-    url: wsUrl || 'ws://localhost:8080',
-    ...(factory ? { factory } : {}),
+    url: WS_URL,
     onStatus: (status) => store.setState({ connection: status }),
     onMessage: (message) => {
       if (message.type === 'telemetry') {

@@ -1,8 +1,7 @@
-export * from './telemetry'
-export * from './command'
+// Paket tipleri tek kaynak olarak src/packets altında tanımlıdır.
+// Bu barrel, paket tiplerini ve ağ/uygulama düzeyi tipleri birlikte sunar.
 
-import type { TelemetryPacket } from './telemetry'
-import type { CommandAck } from './command'
+export * from '../packets'
 
-/** Sunucudan gelebilecek tüm mesaj tipleri. */
-export type IncomingMessage = TelemetryPacket | CommandAck
+/** Bağlantı durumu (ağ katmanı; bir paket değildir). */
+export type ConnectionStatus = 'connected' | 'disconnected' | 'reconnecting'

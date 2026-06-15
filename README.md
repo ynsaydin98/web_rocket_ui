@@ -23,8 +23,11 @@ olarak alınır.
   - `ARM` / `DISARM` / `ABORT` komutları, ACK bekleme + 3 sn timeout
   - **Geri sayım** (T-eksi) ve fırlatma **sekans** adımları
   - T-0'da otomatik `ignite` komutu
+- **Veri kaynağı:** gerçek **WebSocket** sunucusu (IP/Port). Tüm gelen JSON,
+  `src/packets/` (Paketler) altında **deserialize** edilir; komutlar yine
+  Paketler altında **serialize** edilip gönderilir.
 - **WebSocket:** otomatik yeniden bağlanma (exponential backoff)
-- **Mimari:** pub/sub store, saf parse fonksiyonları, global değişken yok
+- **Mimari:** pub/sub store, saf (de)serialize fonksiyonları, global değişken yok
 - **Kalite:** `tsconfig` strict mode açık; son 500 telemetri örneği bellekte
 
 ## Çalıştırma
@@ -37,13 +40,28 @@ npm run typecheck  # yalnızca tip kontrolü
 npm run gen:model  # falcon9.obj modelini yeniden üret
 ```
 
-Backend yokken uygulama yerleşik **mock telemetri kaynağı** ile çalışır.
-Mock başta `GUVENLI`'dir; **ARM** → `HAZIRLIK`, geri sayım sonunda
-**ignite** → `ATESLEME` → birkaç saniye sonra `SEYIR` (roket tırmanır,
-grafikler dolar). Gerçek bir sunucuya bağlanmak için:
+### Veri kaynağı (WebSocket)
+
+Arayüz veriyi **gerçek bir WebSocket sunucusundan** alır; uygulama içinde
+üretilmiş/dummy veri yoktur. Sunucu adresini IP/Port ile verin:
 
 ```bash
-VITE_WS_URL=ws://host:port npm run dev
+VITE_WS_URL=ws://192.168.1.50:8080 npm run dev
+```
+
+Tanımlanmazsa varsayılan `ws://127.0.0.1:8080` denenir (bkz. `src/config.ts`).
+Sunucuya bağlanılamazsa üst barda durum `Bağlantı yok / Yeniden bağlanıyor`
+olarak görünür ve alanlar `—` kalır.
+
+### Donanımsız test (isteğe bağlı)
+
+Gerçek yer istasyonu yokken arayüzü denemek için, paket sözleşmesiyle aynı
+JSON'u yayınlayan **gerçek bir test WS sunucusu** vardır (uygulamadan ayrı):
+
+```bash
+npm run mock:server                          # ws://127.0.0.1:8080
+# ikinci terminalde:
+VITE_WS_URL=ws://127.0.0.1:8080 npm run dev
 ```
 
 ## Proje yapısı
@@ -55,19 +73,24 @@ web_rocket_ui/
 ├─ vite.config.ts
 ├─ scripts/
 │  └─ genFalcon9.mjs            # 3D modeli üreten script
+├─ tools/
+│  └─ mock-ws-server.mjs        # isteğe bağlı test WS sunucusu (uygulama dışı)
 └─ src/
    ├─ main.tsx                  # React giriş
    ├─ App.tsx                   # sekme yönlendirmesi
+   ├─ config.ts                 # WS_URL (VITE_WS_URL)
    ├─ app/
    │  └─ services.tsx           # composition root + store context + useStore
-   ├─ types/                    # telemetry.ts, command.ts, index.ts
+   ├─ packets/                  # ⭐ Paketler: tüm JSON (de)serialize burada
+   │  ├─ telemetry.ts           # TelemetryPacket + deserialize/doğrulama
+   │  ├─ command.ts             # CommandRequest/CommandAck + serialize/build
+   │  └─ index.ts               # deserialize(raw) yönlendirici + barrel
+   ├─ types/                    # paket tiplerini + ConnectionStatus'ü sunar
    ├─ lib/                      # framework-bağımsız çekirdek
-   │  ├─ parser.ts              # JSON → tipli nesne (saf, test edilebilir)
    │  ├─ store.ts               # pub/sub state + ring buffer (MAX_SAMPLES=500)
    │  ├─ websocket.ts           # bağlantı yönetimi + reconnect/backoff
    │  ├─ commands.ts            # komut akışı + ACK + 3 sn timeout
    │  ├─ sequence.ts            # geri sayım + fırlatma sekansı
-   │  ├─ mockServer.ts          # geliştirme için sahte WS kaynağı
    │  ├─ format.ts, useClock.ts # yardımcılar
    ├─ components/
    │  ├─ layout/                # TopBar, Tabs
@@ -76,13 +99,25 @@ web_rocket_ui/
    │  ├─ home/                  # RocketViewer + GNSS/Barometre/IMU panelleri
    │  ├─ charts/                # LineChart + ChartsPage
    │  └─ command/               # CommandPage (komut + sekans + geri sayım)
-   ├─ assets/models/falcon9.obj # 3D model (stilize, değiştirilebilir)
+   ├─ assets/models/falcon9.obj # 3D model
    └─ styles/global.css
 ```
 
-> **3D model notu:** `src/assets/models/falcon9.obj` `scripts/genFalcon9.mjs`
-> ile üretilmiş **stilize bir yer tutucudur**. Gerçek bir Falcon 9 `.obj`
-> dosyanız varsa aynı yola koyup üzerine yazmanız yeterli.
+> **3D model notu:** Görüntüleyici, modeli yüklenince otomatik olarak
+> ölçekleyip ortalar; başka bir `.obj` dosyasını aynı yola koyup üzerine
+> yazmanız yeterlidir.
+
+### Veri akışı
+
+```
+WS sunucusu ──JSON──► websocket.ts ──► packets/deserialize ──► services (router)
+                                                                    │
+                          ┌─────────────────────────────────────────┴───────┐
+                          ▼                                                   ▼
+                 telemetry → store ──► React (useStore)         ack → commands.ts → store
+
+Komut butonu → commands.buildCommand → packets/serialize ──JSON──► WS sunucusu
+```
 
 ## Mesaj formatları (JSON)
 
@@ -117,12 +152,15 @@ web_rocket_ui/
 
 ## Test edilebilirlik
 
-`src/lib/parser.ts` içindeki tüm fonksiyonlar saftır (yan etkisiz),
+`src/packets/` içindeki (de)serialize fonksiyonları saftır (yan etkisiz),
 böylece birim testleri için idealdir:
 
 ```ts
-import { parseMessage } from './src/lib/parser'
+import { deserialize, buildCommand, serializeCommand } from './src/packets'
 
-parseMessage('not json')      // → { ok: false, error: 'Geçersiz JSON' }
-parseMessage('{"type":"x"}')  // → { ok: false, error: 'Tanınmayan mesaj şeması' }
+deserialize('not json')      // → { ok: false, error: 'Geçersiz JSON' }
+deserialize('{"type":"x"}')  // → { ok: false, error: 'Tanınmayan paket şeması' }
+
+serializeCommand(buildCommand('arm'))
+// → '{"type":"command","commandId":"cmd-...","command":"arm"}'
 ```

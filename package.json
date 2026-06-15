@@ -8,7 +8,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "gen:model": "node scripts/genFalcon9.mjs"
+    "gen:model": "node scripts/genFalcon9.mjs",
+    "mock:server": "node tools/mock-ws-server.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^9.114.3",
@@ -24,6 +25,7 @@
     "@types/three": "^0.169.0",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.6.3",
-    "vite": "^5.4.11"
+    "vite": "^5.4.11",
+    "ws": "^8.18.0"
   }
 }
