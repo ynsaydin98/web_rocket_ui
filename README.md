@@ -10,14 +10,18 @@ olarak alınır.
 ## Özellikler
 
 - **Üst bar**
-  - Ortada operasyon modları: `GUVENLI` · `HAZIRLIK` · `ATESLEME` · `SEYIR` (aktif olan vurgulanır)
-  - Sağ üstte canlı saat ve tarih
-  - Solda bağlantı durumu: `connected` / `disconnected` / `reconnecting`
+  - Solda **LOGO + "Rocket Mission-1 / Space Industry"**
+  - Ortada **mission sayacı** `T-00:00:10` — geri sayımda kırmızı, `T+`'da yeşil
+  - Sağ üstte **velocity** ve **altitude** (HUD)
+  - Hemen altında operasyon modu şeridi: `GUVENLI` · `HAZIRLIK` · `ATESLEME` · `SEYIR`
+  - Bağlantı durumu **sağ altta** sabit rozet: `connected` / `disconnected` / `reconnecting`
 - **Ana Sayfa**
   - Ortada **Falcon 9 3D modeli** (`.obj`, döndürülebilir/yakınlaştırılabilir)
   - **GNSS:** görülen uydu sayısı, enlem/boylam, yükseklik, hız, yönelim, UTC
+  - **Pusula:** yönelime göre dönen kare pusula
   - **Barometre:** basınç, yükseklik, sıcaklık
   - **IMU:** ivme (x/y/z), gyro (x/y/z), roll/pitch/yaw
+  - **Ascent Profile / Yörünge:** IMU (ivme/gyro) ve barometre verisinden türetilen menzil–irtifa çizimi
 - **Grafikler** (ayrı sekme, **uPlot**): irtifa / hız / basınç / sıcaklık — zamana karşı
 - **Komut & Sekans** (ayrı sekme)
   - `ARM` / `DISARM` / `ABORT` komutları, ACK bekleme + 3 sn timeout

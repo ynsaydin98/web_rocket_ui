@@ -1,56 +1,32 @@
-import { useServices, useStoreSelector } from '../../app/services'
-import { useClock } from '../../lib/useClock'
-import { OPERATION_MODES, type ConnectionStatus } from '../../types'
-
-const STATUS_LABEL: Record<ConnectionStatus, string> = {
-  connected: 'Bağlı',
-  disconnected: 'Bağlantı yok',
-  reconnecting: 'Yeniden bağlanıyor…',
-}
+import { useStoreSelector } from '../../app/services'
+import MissionClock from '../common/MissionClock'
+import { fmt } from '../../lib/format'
 
 export default function TopBar() {
-  const { store } = useServices()
-  const connection = useStoreSelector((s) => s.connection)
-  const mode = useStoreSelector((s) => s.mode)
-  const now = useClock()
-
-  // Store referansı sadece lint için; doğrudan kullanılmıyor.
-  void store
-
-  const date = now.toLocaleDateString('tr-TR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
-  const time = now.toLocaleTimeString('tr-TR')
+  const speed = useStoreSelector((s) => s.latest?.gnss.speed)
+  const altitude = useStoreSelector((s) => s.latest?.gnss.altitude)
 
   return (
     <header className="topbar">
-      <div className="topbar-left">
-        <img src="/rocket.svg" alt="" width="26" height="26" />
-        <span className={`conn conn-${connection}`}>
-          <span className="conn-dot" />
-          {STATUS_LABEL[connection]}
-        </span>
+      <div className="brand">
+        <img className="brand-logo" src="/rocket.svg" alt="Logo" width="40" height="40" />
+        <div className="brand-text">
+          <span className="brand-title">Rocket Mission-1</span>
+          <span className="brand-sub">Space Industry</span>
+        </div>
       </div>
 
-      <nav className="modes" aria-label="Operasyon modu">
-        <span className="modes-title">Roket Operasyon Modları</span>
-        <div className="modes-list">
-          {OPERATION_MODES.map((m) => (
-            <span
-              key={m}
-              className={`mode mode-${m}${m === mode ? ' active' : ''}`}
-            >
-              {m}
-            </span>
-          ))}
-        </div>
-      </nav>
+      <MissionClock />
 
-      <div className="topbar-right">
-        <div className="clock">{time}</div>
-        <div className="date">{date}</div>
+      <div className="hud">
+        <div className="hud-item">
+          <span className="hud-label">VELOCITY</span>
+          <span className="hud-value">{fmt(speed)}<span className="hud-unit"> m/s</span></span>
+        </div>
+        <div className="hud-item">
+          <span className="hud-label">ALTITUDE</span>
+          <span className="hud-value">{fmt(altitude)}<span className="hud-unit"> m</span></span>
+        </div>
       </div>
     </header>
   )

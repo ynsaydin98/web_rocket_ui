@@ -59,16 +59,14 @@ export class SequenceController {
     const current = this.store.getState().command.countdown
     if (current === null) return
 
-    const next = Math.max(0, Math.round((current - 0.1) * 10) / 10)
+    // T-0'dan sonra sayaç negatife (T+) geçerek yükselmeye devam eder.
+    const next = Math.round((current - 0.1) * 10) / 10
     this.store.setState((s) => ({ command: { ...s.command, countdown: next } }))
 
+    // Sıfırı geçtiğimiz an bir kez ateşleme komutu gönder; sayaç durmaz.
     if (next <= 0 && !this.ignited) {
       this.ignited = true
       this.commands.issue('ignite')
-      if (this.timer !== null) {
-        clearInterval(this.timer)
-        this.timer = null
-      }
     }
   }
 }
