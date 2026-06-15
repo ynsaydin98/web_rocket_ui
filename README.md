@@ -21,7 +21,7 @@ olarak alınır.
   - **Pusula:** yönelime göre dönen kare pusula
   - **Barometre:** basınç, yükseklik, sıcaklık
   - **IMU:** ivme (x/y/z), gyro (x/y/z), roll/pitch/yaw
-  - **Ascent Profile / Yörünge:** IMU (ivme/gyro) ve barometre verisinden türetilen menzil–irtifa çizimi
+  - **Uçuş izi (3D):** roketin yanında, IMU (ivme/gyro) + barometre verisinden türetilen menzil–irtifa yörüngesi 3B çizgi olarak çizilir
 - **Grafikler** (ayrı sekme, **uPlot**): irtifa / hız / basınç / sıcaklık — zamana karşı
 - **Komut & Sekans** (ayrı sekme)
   - `ARM` / `DISARM` / `ABORT` komutları, ACK bekleme + 3 sn timeout

@@ -3,7 +3,6 @@ import GnssPanel from './panels/GnssPanel'
 import BarometerPanel from './panels/BarometerPanel'
 import ImuPanel from './panels/ImuPanel'
 import Compass from './Compass'
-import TrajectoryPlot from './TrajectoryPlot'
 
 export default function HomePage() {
   return (
@@ -23,8 +22,6 @@ export default function HomePage() {
           <ImuPanel />
         </aside>
       </div>
-
-      <TrajectoryPlot />
     </div>
   )
 }
