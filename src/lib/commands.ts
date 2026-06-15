@@ -1,10 +1,9 @@
 // Komut akışı denetleyicisi: komut üretir, ACK bekler, zaman aşımını yönetir
-// ve sonucu store üzerinden UI'a yansıtır. WebSocket'ten bağımsızdır (send enjekte edilir).
+// ve sonucu store'a yansıtır. Ağ katmanından bağımsızdır (send enjekte edilir).
 
-import type { Store, AppState } from './store'
-import type { CommandAck, CommandName, OutgoingCommand } from './types'
+import type { AppState, Store } from './store'
+import type { CommandAck, CommandName, OutgoingCommand } from '../types'
 
-/** Komut göndermek için kullanılan, ağ katmanından soyutlanmış arayüz. */
 export type SendFn = (command: OutgoingCommand) => boolean
 
 let counter = 0
@@ -22,33 +21,7 @@ export class CommandController {
     private readonly timeoutMs = 3000,
   ) {}
 
-  arm(): void {
-    this.issue('arm')
-  }
-
-  disarm(): void {
-    this.issue('disarm')
-  }
-
-  /** Sunucudan ACK geldiğinde main.ts bunu çağırır. */
-  handleAck(ack: CommandAck): void {
-    const { pending } = this.store.getState().command
-    if (pending === null || pending.commandId !== ack.commandId) return
-
-    this.clearTimer()
-    this.store.setState((s) => ({
-      command: {
-        ...s.command,
-        pending: null,
-        lastAck: ack,
-        timedOut: false,
-        armed: ack.status === 'ok' ? ack.command === 'arm' : s.command.armed,
-      },
-    }))
-  }
-
-  private issue(command: CommandName): void {
-    // Zaten bekleyen bir komut varsa yenisini engelle.
+  issue(command: CommandName): void {
     if (this.store.getState().command.pending !== null) return
 
     const message: OutgoingCommand = {
@@ -57,8 +30,7 @@ export class CommandController {
       command,
     }
 
-    const sent = this.send(message)
-    if (!sent) {
+    if (!this.send(message)) {
       this.store.setState((s) => ({
         command: {
           ...s.command,
@@ -86,6 +58,29 @@ export class CommandController {
 
     this.clearTimer()
     this.timer = setTimeout(() => this.handleTimeout(message.commandId), this.timeoutMs)
+  }
+
+  handleAck(ack: CommandAck): void {
+    const { pending } = this.store.getState().command
+    if (pending === null || pending.commandId !== ack.commandId) return
+
+    this.clearTimer()
+    this.store.setState((s) => ({
+      command: {
+        ...s.command,
+        pending: null,
+        lastAck: ack,
+        timedOut: false,
+        armed:
+          ack.status !== 'ok'
+            ? s.command.armed
+            : ack.command === 'arm'
+              ? true
+              : ack.command === 'disarm' || ack.command === 'abort'
+                ? false
+                : s.command.armed,
+      },
+    }))
   }
 
   private handleTimeout(commandId: string): void {

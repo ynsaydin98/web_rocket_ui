@@ -7,6 +7,9 @@
     "moduleResolution": "bundler",
     "skipLibCheck": true,
 
+    /* React */
+    "jsx": "react-jsx",
+
     /* Strict mode */
     "strict": true,
     "noUnusedLocals": true,

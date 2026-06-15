@@ -1,31 +1,25 @@
 // WebSocket bağlantı yönetimi: otomatik yeniden bağlanma (exponential backoff),
-// durum bildirimi ve mesaj gönderimi. Parse işi parser.ts'e delege edilir.
+// durum bildirimi, mesaj gönderimi. Parse işi parser.ts'e delege edilir.
 
 import { parseMessage } from './parser'
-import type { ConnectionStatus, IncomingMessage, OutgoingCommand } from './types'
+import type { ConnectionStatus, IncomingMessage, OutgoingCommand } from '../types'
 
-/**
- * Test ve mock için yeterli olan minimal WebSocket arayüzü.
- * Gerçek tarayıcı `WebSocket` bu sözleşmeyi karşılar.
- */
+/** Mock ve test için yeterli minimal WebSocket arayüzü. */
 export interface SocketLike {
   send(data: string): void
   close(): void
-  onopen: ((this: unknown, ev: unknown) => unknown) | null
-  onclose: ((this: unknown, ev: unknown) => unknown) | null
-  onmessage: ((this: unknown, ev: { data: unknown }) => unknown) | null
-  onerror: ((this: unknown, ev: unknown) => unknown) | null
+  onopen: ((ev: unknown) => unknown) | null
+  onclose: ((ev: unknown) => unknown) | null
+  onmessage: ((ev: { data: unknown }) => unknown) | null
+  onerror: ((ev: unknown) => unknown) | null
 }
 
 export type SocketFactory = (url: string) => SocketLike
 
 export interface ConnectionOptions {
   url: string
-  /** İlk yeniden deneme gecikmesi (ms). */
   baseDelayMs?: number
-  /** Üst sınır gecikme (ms). */
   maxDelayMs?: number
-  /** Test/mock için soket fabrikası; verilmezse gerçek WebSocket kullanılır. */
   factory?: SocketFactory
   onStatus(status: ConnectionStatus): void
   onMessage(message: IncomingMessage): void
@@ -34,7 +28,6 @@ export interface ConnectionOptions {
 const defaultFactory: SocketFactory = (url) =>
   new WebSocket(url) as unknown as SocketLike
 
-/** Yeniden bağlanan WebSocket istemcisi. */
 export class TelemetryConnection {
   private socket: SocketLike | null = null
   private attempt = 0
@@ -57,13 +50,11 @@ export class TelemetryConnection {
     this.onMessage = opts.onMessage
   }
 
-  /** Bağlantıyı başlatır. */
   connect(): void {
     this.closedByUser = false
     this.open()
   }
 
-  /** Bağlantıyı kapatır ve yeniden denemeyi durdurur. */
   disconnect(): void {
     this.closedByUser = true
     if (this.reconnectTimer !== null) {
@@ -75,7 +66,6 @@ export class TelemetryConnection {
     this.onStatus('disconnected')
   }
 
-  /** Komutu JSON olarak gönderir. Soket açık değilse false döner. */
   send(command: OutgoingCommand): boolean {
     if (this.socket === null) return false
     try {
@@ -88,7 +78,6 @@ export class TelemetryConnection {
 
   private open(): void {
     this.onStatus(this.attempt === 0 ? 'disconnected' : 'reconnecting')
-
     const socket = this.factory(this.url)
     this.socket = socket
 
@@ -96,18 +85,14 @@ export class TelemetryConnection {
       this.attempt = 0
       this.onStatus('connected')
     }
-
     socket.onmessage = (ev) => {
       if (typeof ev.data !== 'string') return
       const result = parseMessage(ev.data)
       if (result.ok) this.onMessage(result.value)
-      // Hatalı paketler sessizce yok sayılır; istenirse burada loglanabilir.
     }
-
     socket.onerror = () => {
-      // Hata ardından genelde onclose tetiklenir; backoff orada yönetilir.
+      // Genelde ardından onclose gelir; backoff orada yönetilir.
     }
-
     socket.onclose = () => {
       this.socket = null
       if (this.closedByUser) return
@@ -116,10 +101,7 @@ export class TelemetryConnection {
   }
 
   private scheduleReconnect(): void {
-    const delay = Math.min(
-      this.maxDelayMs,
-      this.baseDelayMs * 2 ** this.attempt,
-    )
+    const delay = Math.min(this.maxDelayMs, this.baseDelayMs * 2 ** this.attempt)
     this.attempt += 1
     this.onStatus('reconnecting')
     this.reconnectTimer = setTimeout(() => {

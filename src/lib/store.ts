@@ -1,42 +1,35 @@
-// Minimal pub/sub state store. Framework yok, global yok.
-// Tüketiciler `subscribe` ile dinler; `setState` çağrısı tüm dinleyicileri tetikler.
+// Minimal, framework-bağımsız pub/sub store + uygulama state'i.
 
 import type {
   CommandAck,
   CommandName,
   ConnectionStatus,
+  OperationMode,
   TelemetryPacket,
-} from './types'
+} from '../types'
 
-/** Bellekte tutulacak maksimum telemetri örneği sayısı (ring buffer kapasitesi). */
+/** Bellekte tutulacak maksimum telemetri örneği (ring buffer). */
 export const MAX_SAMPLES = 500
 
-export type Tab = 'telemetry' | 'command'
-
-/** Bekleyen komutun UI'da gösterilebilir durumu. */
 export interface CommandState {
-  /** Şu an ACK beklenen komut; yoksa null. */
   pending: { commandId: string; command: CommandName } | null
-  /** Son alınan ACK. */
   lastAck: CommandAck | null
-  /** Son komut zaman aşımına mı uğradı? */
   timedOut: boolean
-  /** Bilinen en son arm durumu (başarılı ACK'lere göre). */
   armed: boolean
+  /** Geri sayım T değeri (saniye). null ise sayım kapalı. */
+  countdown: number | null
 }
 
 export interface AppState {
   connection: ConnectionStatus
-  activeTab: Tab
+  mode: OperationMode
   latest: TelemetryPacket | null
-  /** En eski → en yeni sırada, en fazla MAX_SAMPLES örnek. */
   history: readonly TelemetryPacket[]
   command: CommandState
 }
 
 export type Listener<S> = (state: S) => void
 
-/** Tipli, jenerik pub/sub store. */
 export class Store<S> {
   private state: S
   private readonly listeners = new Set<Listener<S>>()
@@ -45,22 +38,15 @@ export class Store<S> {
     this.state = initial
   }
 
-  getState(): S {
-    return this.state
-  }
+  getState = (): S => this.state
 
-  /**
-   * State'i kısmi bir yama veya (mevcut state → yama) fonksiyonu ile günceller.
-   * Referans değişirse dinleyicileri çağırır.
-   */
   setState(patch: Partial<S> | ((state: S) => Partial<S>)): void {
     const delta = typeof patch === 'function' ? patch(this.state) : patch
     this.state = { ...this.state, ...delta }
     for (const listener of this.listeners) listener(this.state)
   }
 
-  /** Dinleyici ekler ve aboneliği iptal eden fonksiyonu döner. */
-  subscribe(listener: Listener<S>): () => void {
+  subscribe = (listener: Listener<S>): (() => void) => {
     this.listeners.add(listener)
     return () => {
       this.listeners.delete(listener)
@@ -68,20 +54,23 @@ export class Store<S> {
   }
 }
 
-/** Uygulama için başlangıç state'ini üretir (test edilebilirlik için saf fabrika). */
 export function createInitialState(): AppState {
   return {
     connection: 'disconnected',
-    activeTab: 'telemetry',
+    mode: 'GUVENLI',
     latest: null,
     history: [],
-    command: { pending: null, lastAck: null, timedOut: false, armed: false },
+    command: {
+      pending: null,
+      lastAck: null,
+      timedOut: false,
+      armed: false,
+      countdown: null,
+    },
   }
 }
 
-/**
- * Geçmişe yeni bir örnek ekleyip MAX_SAMPLES sınırına kırpar (saf fonksiyon).
- */
+/** Geçmişe yeni örnek ekleyip MAX_SAMPLES'a kırpar (saf). */
 export function appendSample(
   history: readonly TelemetryPacket[],
   sample: TelemetryPacket,
