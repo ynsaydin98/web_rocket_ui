@@ -8,7 +8,7 @@ import { Canvas, useLoader } from '@react-three/fiber'
 import { Line, OrbitControls } from '@react-three/drei'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
 import { Box3, MeshStandardMaterial, Vector3, type Group, type Mesh } from 'three'
-import { useStoreSelector } from '../../app/services'
+import { useTelemetryBuffer } from '../../app/telemetry'
 import { computeTrajectory } from '../../lib/trajectory'
 import falcon9Url from '../../assets/models/falcon9.obj?url'
 
@@ -77,8 +77,8 @@ function toTrailPoints(traj: { range: number; altitude: number }[]): Point3[] {
 }
 
 export default function RocketViewer() {
-  // Canvas DIŞINDA store'a eriş (context köprüsü gerekmesin); noktaları prop ile geçir.
-  const history = useStoreSelector((s) => s.history)
+  // Canvas DIŞINDA telemetriyi al (context köprüsü gerekmesin); noktaları prop ile geçir.
+  const history = useTelemetryBuffer()
   const points = useMemo(() => toTrailPoints(computeTrajectory(history)), [history])
 
   const fov = 38

@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
-import { ServicesProvider } from './app/services'
+import { TelemetryProvider } from './app/telemetry'
 import './styles/global.css'
 import 'uplot/dist/uPlot.min.css'
 
@@ -10,8 +10,8 @@ if (root === null) throw new Error('#root bulunamadı')
 
 ReactDOM.createRoot(root).render(
   <React.StrictMode>
-    <ServicesProvider>
+    <TelemetryProvider>
       <App />
-    </ServicesProvider>
+    </TelemetryProvider>
   </React.StrictMode>,
 )

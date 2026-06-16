@@ -1,10 +1,10 @@
-import { useServices, useStoreSelector } from '../../app/services'
+import { useCommand, useControllers } from '../../app/telemetry'
 import Panel from '../../components/common/Panel'
 import { fmtCountdown } from '../../lib/format'
 import { activeStepCount, SEQUENCE } from '../../lib/sequence'
-import type { AppState } from '../../lib/store'
+import type { CommandState } from '../../lib/commands'
 
-function describe(c: AppState['command']): { text: string; kind: string } {
+function describe(c: CommandState): { text: string; kind: string } {
   if (c.pending) return { text: `'${c.pending.command}' gönderildi, ACK bekleniyor…`, kind: 'pending' }
   if (c.timedOut) return { text: 'Zaman aşımı: 3 sn içinde ACK alınamadı.', kind: 'error' }
   if (c.lastAck) {
@@ -16,8 +16,8 @@ function describe(c: AppState['command']): { text: string; kind: string } {
 }
 
 export default function CommandPage() {
-  const { commands, sequence } = useServices()
-  const command = useStoreSelector((s) => s.command)
+  const { commands, sequence } = useControllers()
+  const command = useCommand()
 
   const countingDown = command.countdown !== null
   const done = countingDown ? activeStepCount(command.countdown ?? 0) : 0

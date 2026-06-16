@@ -1,10 +1,10 @@
 import Panel from '../../../components/common/Panel'
 import Stat from '../../../components/common/Stat'
-import { useStoreSelector } from '../../../app/services'
+import { useTelemetry } from '../../../app/telemetry'
 import { fmt } from '../../../lib/format'
 
 export default function ImuPanel() {
-  const imu = useStoreSelector((s) => s.latest?.imu)
+  const imu = useTelemetry()?.imu
 
   return (
     <Panel title="IMU">

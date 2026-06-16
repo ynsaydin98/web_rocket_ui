@@ -1,9 +1,9 @@
-import { useStoreSelector } from '../../app/services'
+import { useTelemetry } from '../../app/telemetry'
 import { OPERATION_MODES } from '../../types'
 
 /** Operasyon modu şeridi (üst barın altında, ortalı). */
 export default function ModesBar() {
-  const mode = useStoreSelector((s) => s.mode)
+  const mode = useTelemetry()?.mode ?? 'GUVENLI'
 
   return (
     <div className="modesbar">

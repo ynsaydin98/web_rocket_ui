@@ -1,10 +1,10 @@
 import Panel from '../../../components/common/Panel'
 import Stat from '../../../components/common/Stat'
-import { useStoreSelector } from '../../../app/services'
+import { useTelemetry } from '../../../app/telemetry'
 import { fmt, fmtUtc } from '../../../lib/format'
 
 export default function GnssPanel() {
-  const g = useStoreSelector((s) => s.latest?.gnss)
+  const g = useTelemetry()?.gnss
 
   return (
     <Panel title="GNSS">

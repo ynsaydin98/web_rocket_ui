@@ -15,13 +15,10 @@ olarak alınır.
   - Sağ üstte **velocity** ve **altitude** (HUD)
   - Hemen altında operasyon modu şeridi: `GUVENLI` · `HAZIRLIK` · `ATESLEME` · `SEYIR`
   - Bağlantı durumu **sağ altta** sabit rozet: `connected` / `disconnected` / `reconnecting`
-- **Ana Sayfa**
-  - Ortada **Falcon 9 3D modeli** (`.obj`, döndürülebilir/yakınlaştırılabilir)
-  - **GNSS:** görülen uydu sayısı, enlem/boylam, yükseklik, hız, yönelim, UTC
-  - **Pusula:** yönelime göre dönen kare pusula
-  - **Barometre:** basınç, yükseklik, sıcaklık
-  - **IMU:** ivme (x/y/z), gyro (x/y/z), roll/pitch/yaw
-  - **Uçuş izi (3D):** roketin yanında, IMU (ivme/gyro) + barometre verisinden türetilen menzil–irtifa yörüngesi 3B çizgi olarak çizilir
+- **Ana Sayfa** — net **bölmeler**e ayrılmış:
+  - **Konum & Yönelim:** GNSS (uydu, enlem/boylam, yükseklik, hız, yönelim, UTC) + dönen pusula
+  - **3D Görünüm & Uçuş İzi:** Falcon 9 modeli + roketin yanında IMU/barometre'den türetilen menzil–irtifa izi
+  - **Atmosfer & Hareket:** Barometre (basınç/yükseklik/sıcaklık) + IMU (ivme, gyro, roll/pitch/yaw)
 - **Grafikler** (ayrı sekme, **uPlot**): irtifa / hız / basınç / sıcaklık — zamana karşı
 - **Komut & Sekans** (ayrı sekme)
   - `ARM` / `DISARM` / `ABORT` komutları, ACK bekleme + 3 sn timeout
@@ -31,8 +28,8 @@ olarak alınır.
   `src/packets/` (Paketler) altında **deserialize** edilir; komutlar yine
   Paketler altında **serialize** edilip gönderilir.
 - **WebSocket:** otomatik yeniden bağlanma (exponential backoff)
-- **Mimari:** pub/sub store, saf (de)serialize fonksiyonları, global değişken yok
-- **Kalite:** `tsconfig` strict mode açık; son 500 telemetri örneği bellekte
+- **Mimari:** React Context + `useState` (push) ile anlık veri; saf (de)serialize fonksiyonları
+- **Kalite:** `tsconfig` strict mode açık; anlık veri (geçmiş saklanmaz)
 
 ## Çalıştırma
 
@@ -84,21 +81,21 @@ web_rocket_ui/
    ├─ App.tsx                   # sekme yönlendirmesi
    ├─ config.ts                 # WS_URL (VITE_WS_URL)
    ├─ app/
-   │  └─ services.tsx           # composition root + store context + useStore
+   │  └─ telemetry.tsx          # React Context + useState (push) + hook'lar
    ├─ packets/                  # ⭐ Paketler: tüm JSON (de)serialize burada
    │  ├─ telemetry.ts           # TelemetryPacket + deserialize/doğrulama
    │  ├─ command.ts             # CommandRequest/CommandAck + serialize/build
    │  └─ index.ts               # deserialize(raw) yönlendirici + barrel
    ├─ types/                    # paket tiplerini + ConnectionStatus'ü sunar
    ├─ lib/                      # framework-bağımsız çekirdek
-   │  ├─ store.ts               # pub/sub state + ring buffer (MAX_SAMPLES=500)
    │  ├─ websocket.ts           # bağlantı yönetimi + reconnect/backoff
-   │  ├─ commands.ts            # komut akışı + ACK + 3 sn timeout
+   │  ├─ commands.ts            # komut akışı + ACK + 3 sn timeout + CommandState
    │  ├─ sequence.ts            # geri sayım + fırlatma sekansı
-   │  ├─ format.ts, useClock.ts # yardımcılar
+   │  ├─ trajectory.ts          # menzil/irtifa yörüngesi (saf)
+   │  └─ format.ts              # yardımcılar
    ├─ components/
-   │  ├─ layout/                # TopBar, Tabs
-   │  └─ common/                # Panel, Stat
+   │  ├─ layout/                # TopBar, ModesBar, Tabs, ConnectionBadge
+   │  └─ common/                # Panel, Stat, Section, MissionClock
    ├─ features/
    │  ├─ home/                  # RocketViewer + GNSS/Barometre/IMU panelleri
    │  ├─ charts/                # LineChart + ChartsPage
@@ -114,14 +111,18 @@ web_rocket_ui/
 ### Veri akışı
 
 ```
-WS sunucusu ──JSON──► websocket.ts ──► packets/deserialize ──► services (router)
+WS sunucusu ──JSON──► websocket.ts ──► packets/deserialize ──► telemetry.tsx (router)
                                                                     │
                           ┌─────────────────────────────────────────┴───────┐
                           ▼                                                   ▼
-                 telemetry → store ──► React (useStore)         ack → commands.ts → store
+        setTelemetry(paket) → useTelemetry() (anlık)        ack → commands.handleAck
 
 Komut butonu → commands.buildCommand → packets/serialize ──JSON──► WS sunucusu
 ```
+
+Anlık veri doğrudan React state'e yazılır (push); **geçmiş tutulmaz**.
+Grafikler ve 3D iz, yalnızca kendi içlerinde `useTelemetryBuffer` ile
+**geçici** bir tampon kullanır (sekme değişince sıfırlanır).
 
 ## Mesaj formatları (JSON)
 

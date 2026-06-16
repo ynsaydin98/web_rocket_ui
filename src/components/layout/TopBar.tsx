@@ -1,10 +1,11 @@
-import { useStoreSelector } from '../../app/services'
+import { useTelemetry } from '../../app/telemetry'
 import MissionClock from '../common/MissionClock'
 import { fmt } from '../../lib/format'
 
 export default function TopBar() {
-  const speed = useStoreSelector((s) => s.latest?.gnss.speed)
-  const altitude = useStoreSelector((s) => s.latest?.gnss.altitude)
+  const telemetry = useTelemetry()
+  const speed = telemetry?.gnss.speed
+  const altitude = telemetry?.gnss.altitude
 
   return (
     <header className="topbar">

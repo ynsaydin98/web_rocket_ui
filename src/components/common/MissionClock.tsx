@@ -1,4 +1,4 @@
-import { useStoreSelector } from '../../app/services'
+import { useCommand } from '../../app/telemetry'
 import { fmtMissionClock } from '../../lib/format'
 import { COUNTDOWN_START } from '../../lib/sequence'
 
@@ -9,7 +9,7 @@ import { COUNTDOWN_START } from '../../lib/sequence'
  * - Fırlatış sonrası (T+): yeşil
  */
 export default function MissionClock() {
-  const countdown = useStoreSelector((s) => s.command.countdown)
+  const countdown = useCommand().countdown
 
   const value = countdown ?? COUNTDOWN_START
   const phase = countdown === null ? 'idle' : value > 0 ? 'down' : 'up'

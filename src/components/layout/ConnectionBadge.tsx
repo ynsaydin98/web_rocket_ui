@@ -1,4 +1,4 @@
-import { useStoreSelector } from '../../app/services'
+import { useConnection } from '../../app/telemetry'
 import type { ConnectionStatus } from '../../types'
 
 const STATUS_LABEL: Record<ConnectionStatus, string> = {
@@ -9,7 +9,7 @@ const STATUS_LABEL: Record<ConnectionStatus, string> = {
 
 /** Sağ alt köşede sabit bağlantı durumu göstergesi. */
 export default function ConnectionBadge() {
-  const connection = useStoreSelector((s) => s.connection)
+  const connection = useConnection()
 
   return (
     <div className={`conn-badge conn-${connection}`}>

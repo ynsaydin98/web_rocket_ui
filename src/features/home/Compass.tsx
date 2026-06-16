@@ -1,4 +1,4 @@
-import { useStoreSelector } from '../../app/services'
+import { useTelemetry } from '../../app/telemetry'
 import { fmt } from '../../lib/format'
 
 const CARDINALS = [
@@ -10,7 +10,7 @@ const CARDINALS = [
 
 /** Yönelim (heading) gösteren kare pusula. */
 export default function Compass() {
-  const heading = useStoreSelector((s) => s.latest?.gnss.heading) ?? 0
+  const heading = useTelemetry()?.gnss.heading ?? 0
   const r = 86
   const cx = 100
   const cy = 100

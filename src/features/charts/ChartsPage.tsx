@@ -1,8 +1,8 @@
-import { useStoreSelector } from '../../app/services'
+import { useTelemetryBuffer } from '../../app/telemetry'
 import LineChart from './LineChart'
 
 export default function ChartsPage() {
-  const history = useStoreSelector((s) => s.history)
+  const history = useTelemetryBuffer()
   const xValues = history.map((p) => p.t)
 
   return (
