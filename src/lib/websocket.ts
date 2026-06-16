@@ -83,10 +83,12 @@ export class TelemetryConnection {
     this.socket = socket
 
     socket.onopen = () => {
+      if (socket !== this.socket) return // bayat soket
       this.attempt = 0
       this.onStatus('connected')
     }
     socket.onmessage = (ev) => {
+      if (socket !== this.socket) return // bayat soket
       if (typeof ev.data !== 'string') return
       const result = deserialize(ev.data)
       if (result.ok) this.onMessage(result.value)
@@ -95,6 +97,9 @@ export class TelemetryConnection {
       // Genelde ardından onclose gelir; backoff orada yönetilir.
     }
     socket.onclose = () => {
+      // Yalnızca güncel soketin kapanışı yeniden bağlanmayı tetikler.
+      // (StrictMode'daki disconnect→connect'te eski soketin geç onclose'u yok sayılır.)
+      if (socket !== this.socket) return
       this.socket = null
       if (this.closedByUser) return
       this.scheduleReconnect()
