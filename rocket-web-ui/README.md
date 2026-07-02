@@ -527,6 +527,9 @@ Sayfa yapısı:
 /commands
   Komut & Sekans
 
+/mission-control
+  İtki test standı Mission Control (simülasyon)
+
 /debug
   WebSocket/debug mesajları
 ```
@@ -554,12 +557,13 @@ Uygulama `react-router-dom` ve `BrowserRouter` ile çalışan kalıcı bir göre
 Mevcut route'lar:
 
 ```text
-/           Ana Sayfa
-/telemetry  Grafikler ve telemetri
-/tables/unit-1  Ünite 1 model tabloları
-/tables/unit-2  Ünite 2 model tabloları
-/commands   Komut & Sekans
-/debug      Debug konsolu
+/                  Ana Sayfa
+/telemetry         Grafikler ve telemetri
+/tables/unit-1     Ünite 1 model tabloları
+/tables/unit-2     Ünite 2 model tabloları
+/commands          Komut & Sekans
+/mission-control   İtki test standı Mission Control (simülasyon)
+/debug             Debug konsolu
 ```
 
 Ortak görsel bileşenler `src/shared/components` altında bulunur: `AppShell`, `TopBar`, `PageTabs`, `Panel`, `MetricCard`, `StatusBadge` ve `JsonViewer`.
@@ -573,3 +577,30 @@ Merkez araç görselleştirmesi Three.js ile prosedürel olarak oluşturulan ger
 Telemetri payload'ındaki opsiyonel `enlem` ve `boylam` değerleri geldiğinde ana sayfadaki OpenStreetMap görünümü roketin güncel koordinatına odaklanır. Bu alanlar bulunmadığında harita alanı konum verisi beklediğini gösterir; dekoratif veya sahte rota çizilmez.
 
 Opsiyonel `roll`, `pitch` ve `yaw` telemetri değerleri yönelim panelini canlı olarak hareket ettirir. `roll` yapay ufku döndürür, `pitch` ufuk çizgisini dikey hareket ettirir ve `yaw` pusula yönünü belirler.
+
+## İtki Test Standı Mission Control (Simülasyon)
+
+`/mission-control` sekmesi, bir roket itki test standı için Mission Control tarzı bir HMI/SCADA ekranıdır (`src/features/missionControl`, `src/pages/MissionControlPage.tsx`).
+
+Bu ekran **kendi kendine simüle edilen bağımsız bir demodur** — gerçek WebSocket telemetrisine veya `RoketTelemetriPaket`/`CommandEnvelope` protokolüne bağlı değildir. Kendi Zustand store'unda (`missionControlStore.ts`) yürüyen bir sekans state machine'i (IDLE → Pre-check → ARM → Yedek Vana → İtki Vanası → Ateşleme → Yanma → Shutdown) basınç/sıcaklık sensörlerini simüle eder; sekans yalnızca sayfa açıkken 10 Hz'de tick'lenir (`missionControlSimulationLoop.ts`, sayfa mount/unmount'una bağlı).
+
+İçerik:
+
+- P&ID mimik şeması: oksitleyici tankı (N₂O) → manuel vana → itki vanası → manifold → yanma odası → nozzle, canlı sensör rozetleriyle (PT-1…PT-5, TC-1, TC-2).
+- Canlı basınç/sıcaklık grafiği.
+- Sekans kontrol paneli: SEKANS BAŞLAT, kilit + ACİL DURDUR (kilide basılınca 10 sn aktif olur), manuel vana slider'ı, adım listesi ve RESET.
+
+Klasör yapısı:
+
+```text
+features/missionControl/
+ ├── config/missionControlConfig.ts     # sensör/adım/hedef sabitleri
+ ├── engine/colorRamp.ts                # basınç/sıcaklık gösterge renk geçişleri
+ ├── store/missionControlStore.ts       # Zustand store (state machine + simülasyon tick'i)
+ ├── services/missionControlSimulationLoop.ts  # start/stop interval
+ ├── mappers/missionControlViewMapper.ts # store state -> render-hazır view model
+ ├── components/                        # şema (SVG), grafik, sekans paneli, üst bar
+ └── missionControl.css
+```
+
+Kaynak tasarımda bulunan HOLD (duraklat) butonu ve ALARM/OLAY LOGU paneli, kullanıcı onayıyla bu implementasyona dahil edilmedi.
