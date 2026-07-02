@@ -238,6 +238,24 @@ h2 { margin: 0; font-size: 18px; letter-spacing: .03em; }
 .unit-command-header__response { display: flex; align-items: center; color: var(--text-muted); font-size: 13px; font-weight: 700; letter-spacing: .04em; }
 .unit-command-header__action:hover,
 .unit-command-header__version:hover { color: var(--accent-blue); background: rgba(56,163,255,.08); }
+.switching-table-panel > .panel__body { padding: 0; overflow-x: auto; }
+.switching-table { width: 100%; min-width: 0; font: 11px ui-monospace, monospace; }
+.switching-table__head,
+.switching-table__row { display: grid; grid-template-columns: 40px 40px 40px minmax(96px, 1fr) 86px 68px; align-items: center; gap: 5px; min-height: 32px; padding: 5px 8px; border-bottom: 1px solid rgba(36,64,97,.68); }
+.switching-table__head { min-height: 32px; color: #76beff; background: #172842; font-size: 9px; font-weight: 700; text-transform: uppercase; }
+.switching-table__row:last-child { border-bottom: 0; }
+.switching-table__row strong { color: #b9d9f7; font-weight: 700; line-height: 1.35; }
+.switching-led { display: inline-block; width: 10px; height: 10px; border-radius: 999px; background: currentColor; box-shadow: 0 0 8px currentColor; }
+.switching-led--green { color: var(--accent-green); }
+.switching-led--red { color: var(--accent-red); }
+.switching-table__actions { display: flex; gap: 4px; }
+.switching-table__button { display: inline-grid; place-items: center; width: 24px; height: 22px; padding: 0; border: 1px solid var(--border-panel); color: var(--text-main); background: rgba(56,163,255,.08); font: 800 10px ui-monospace, monospace; }
+.switching-table__button:hover { border-color: var(--accent-blue); background: rgba(56,163,255,.18); }
+.switching-table__button--close { color: var(--accent-red); background: rgba(255,77,79,.1); }
+.switching-table__button--reset { color: var(--accent-yellow); background: rgba(245,197,66,.1); }
+.switching-table__button--open { color: var(--accent-green); background: rgba(0,208,132,.1); }
+.switching-table__force { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 11px; font-weight: 700; }
+.switching-table__force input { width: 14px; height: 14px; accent-color: var(--accent-blue); }
 @media (max-width: 620px) {
   .tables-layout { grid-template-columns: 1fr; }
   .unit-sidebar { position: static; }

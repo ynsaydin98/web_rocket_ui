@@ -3,9 +3,14 @@ import { Navigate, NavLink, useParams } from "react-router-dom";
 import { TelemetryDataTable } from "../features/dashboard/components/TelemetryDataTable";
 import { sendCommand } from "../features/commands/services/commandSender";
 import { GnssDataTable } from "../features/gnss/components/GnssDataTable";
+import { createSwitchingCommand } from "../features/switching/commands/switchingCommandFactory";
 import { useTelemetryStore } from "../features/telemetry/store/telemetryStore";
 import { createVersionQueryCommand } from "../features/version/commands/versionCommandFactory";
 import { useVersionStore } from "../features/version/store/versionStore";
+import {
+  SwitchingControlTable,
+  type SwitchingControlRow,
+} from "../shared/components/SwitchingControlTable";
 import { UnitCommandHeader } from "../shared/components/UnitCommandHeader";
 
 const tableGridStyle = {
@@ -15,12 +20,48 @@ const tableGridStyle = {
   "--tables-column-count-sm": 1,
 } as CSSProperties;
 
+const switchingTableGridStyle = {
+  "--tables-column-count": 3,
+  "--tables-column-count-lg": 3,
+  "--tables-column-count-md": 1,
+  "--tables-column-count-sm": 1,
+} as CSSProperties;
+
 type PendingTelemetryCommand = "yoklama" | null;
-type TableSection = "telemetry" | "gnss";
+type TableSection = "telemetry" | "gnss" | "switching";
 
 const tableSections: Array<{ id: TableSection; label: string; to: string }> = [
   { id: "telemetry", label: "TELEMETRİ", to: "/tables/unit-1/telemetry" },
   { id: "gnss", label: "GNSS", to: "/tables/unit-1/gnss" },
+  {
+    id: "switching",
+    label: "ANAHTARLAMA",
+    to: "/tables/unit-1/switching",
+  },
+];
+
+const switchingRows: SwitchingControlRow[] = [
+  {
+    id: "main-power",
+    status: "green",
+    command: "red",
+    mode: "green",
+    info: "Ana besleme anahtarlama hatti",
+  },
+  {
+    id: "payload-power",
+    status: "red",
+    command: "red",
+    mode: "green",
+    info: "Faydali yuk guc anahtarlama hatti",
+  },
+  {
+    id: "telemetry-power",
+    status: "green",
+    command: "green",
+    mode: "red",
+    info: "Telemetri guc anahtarlama hatti",
+  },
 ];
 
 export function Unit1TablesPage() {
@@ -128,13 +169,39 @@ export function Unit1TablesPage() {
           </div>
         </div>
       )}
+
+      {activeSection === "switching" && (
+        <div className="tables-grid" style={switchingTableGridStyle}>
+          <div className="tables-grid__column">
+            <SwitchingControlTable
+              title="Anahtarlama Arayuzu"
+              rows={switchingRows}
+              onCommand={(row, action, force) => {
+                sendCommand(
+                  createSwitchingCommand({
+                    switchId: row.id,
+                    action,
+                    force,
+                  }),
+                );
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function getTableSection(section: string | undefined): TableSection | null {
   if (!section) return "telemetry";
-  if (section === "telemetry" || section === "gnss") return section;
+  if (
+    section === "telemetry" ||
+    section === "gnss" ||
+    section === "switching"
+  ) {
+    return section;
+  }
   return null;
 }
 
