@@ -5,6 +5,11 @@ import { sendCommand } from "../features/commands/services/commandSender";
 import { GnssDataTable } from "../features/gnss/components/GnssDataTable";
 import { createSwitchingCommand } from "../features/switching/commands/switchingCommandFactory";
 import { useTelemetryStore } from "../features/telemetry/store/telemetryStore";
+import {
+  Unit1CommandForm,
+  type Unit1ForceValue,
+  type Unit1CommandOption,
+} from "../features/unit1/components/Unit1CommandForm";
 import { createVersionQueryCommand } from "../features/version/commands/versionCommandFactory";
 import { useVersionStore } from "../features/version/store/versionStore";
 import {
@@ -112,6 +117,15 @@ export function Unit1TablesPage() {
     sendCommand(createVersionQueryCommand());
   }
 
+  function unit1KomutGonder(
+    command: Unit1CommandOption,
+    force: Unit1ForceValue,
+  ) {
+    // Komut gonderimini burada doldurabilirsin.
+    void command;
+    void force;
+  }
+
   if (!activeSection) {
     return <Navigate to="/tables/unit-1" replace />;
   }
@@ -166,6 +180,9 @@ export function Unit1TablesPage() {
           </div>
           <div className="tables-grid__column">
             <GnssDataTable />
+          </div>
+          <div className="tables-grid__column">
+            <Unit1CommandForm onSubmit={unit1KomutGonder} />
           </div>
         </div>
       )}

@@ -8,7 +8,7 @@
 }
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; min-height: 100vh; background: radial-gradient(circle at 75% -15%, #102b4b 0, transparent 34%), var(--bg-main); }
-button, input { font: inherit; }
+button, input, select { font: inherit; }
 button { cursor: pointer; }
 .app-shell { min-height: 100vh; display: grid; grid-template-rows: auto auto 1fr auto; }
 .top-bar { min-height: 86px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 16px clamp(20px, 4vw, 56px); border-bottom: 1px solid var(--border-panel); background: rgba(5, 11, 18, .88); }
@@ -238,6 +238,13 @@ h2 { margin: 0; font-size: 18px; letter-spacing: .03em; }
 .unit-command-header__response { display: flex; align-items: center; color: var(--text-muted); font-size: 13px; font-weight: 700; letter-spacing: .04em; }
 .unit-command-header__action:hover,
 .unit-command-header__version:hover { color: var(--accent-blue); background: rgba(56,163,255,.08); }
+.unit-command-form { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; width: min(520px, 100%); padding: 12px; border: 1px solid var(--border-panel); background: rgba(5,11,18,.42); }
+.unit-command-form__field { display: grid; flex: 1 1 220px; gap: 6px; min-width: 0; color: var(--text-muted); font: 700 10px ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; }
+.unit-command-form__field select { width: 100%; min-height: 38px; padding: 9px 11px; border: 1px solid var(--border-panel); outline: none; color: var(--text-main); background: var(--bg-main); }
+.unit-command-form__field select:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 2px rgba(56,163,255,.1); }
+.unit-command-form__force { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; color: var(--text-muted); font: 700 11px ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; }
+.unit-command-form__force input { width: 15px; height: 15px; accent-color: var(--accent-blue); }
+.unit-command-form__submit { min-height: 38px; }
 .switching-table-panel > .panel__body { padding: 0; overflow-x: auto; }
 .switching-table { width: 100%; min-width: 0; font: 11px ui-monospace, monospace; }
 .switching-table__head,
