@@ -5,10 +5,12 @@ import { MissionControlSequencePanel } from "../features/missionControl/componen
 import { buildMissionControlView } from "../features/missionControl/mappers/missionControlViewMapper";
 import "../features/missionControl/missionControl.css";
 import { useMissionControlStore } from "../features/missionControl/store/missionControlStore";
+import { useMKUItkiDiagnostikPaketStore } from "../store/mku/mkuItkiDiagnostikPaketStore";
 
 export function MissionControlPage() {
-  const state = useMissionControlStore((s) => s);
-  const view = buildMissionControlView(state);
+  const ozet = useMKUItkiDiagnostikPaketStore((s) => s.ozet);
+  const localState = useMissionControlStore((s) => s);
+  const view = buildMissionControlView(ozet, localState);
 
   return (
     <div className="mc-page">

@@ -1,7 +1,8 @@
-// Ham mission-control state'inden (missionControlStore) render'a hazır view
-// model üreten saf fonksiyon. status/vana/ateşleyici/adım türetimi artık
-// tamamen gerçek opMod değerinin (+ yerel aborted güvenlik bayrağının) bir
-// fonksiyonu, yerel kurgulanmış bir simülasyon değil.
+// MKU itki diagnostik paketinin UI modelinden (mkuItkiDiagnostikPaketStore)
+// ve yerel güvenlik durumundan (missionControlStore) render'a hazır view
+// model üreten saf fonksiyon. Vana/ateşleyici/faz okumaları artık paketteki
+// gerçek alanlardan (valfDurum_*, itkiOpDurumlari, geri sayım / geçen süre
+// sayaçları) türetiliyor.
 
 import { ptColor, tcColor } from "../engine/colorRamp";
 import {
@@ -12,18 +13,37 @@ import {
   type OpMod,
   type SensorId,
 } from "../config/missionControlConfig";
+import type { MKUItkiDiagnostikPaketUiModel } from "../../../ui-models/mku/mkuItkiDiagnostikPaketUiModel";
 import type { IgniterState, MissionControlState, ValveState } from "../store/missionControlStore";
+import { formatGeriSayim, mapItkiOpDurumlariToOpMod } from "./itkiOpModMapper";
 
 function fmt(id: SensorId, v: number): string {
   return id.startsWith("TC") ? String(Math.round(v)) : v.toFixed(1);
 }
 
-function fmtClock(opMod: OpMod, phaseEnteredAt: number): string {
-  const sign = opMod === "ATEŞLEME" || opMod === "TAMAMLANDI" ? "T+ " : "T- ";
-  const elapsedSec = Math.max(0, (Date.now() - phaseEnteredAt) / 1000);
-  const m = Math.floor(elapsedSec / 60);
-  const s = elapsedSec % 60;
-  return `${sign}${String(m).padStart(2, "0")}:${s.toFixed(1).padStart(4, "0")}`;
+/**
+ * Görev saati: geri sayım fazlarında paketteki itkiBaslatmaGeriSayim_sn (T-),
+ * ateşleme ve sonrasında itkiGecenSure_ms (T+) gösterilir. Paket henüz
+ * gelmediyse placeholder.
+ */
+function fmtClock(opMod: OpMod, ozet?: MKUItkiDiagnostikPaketUiModel): string {
+  if (!ozet) return "T- --:--";
+  if (opMod === "ATEŞLEME" || opMod === "TAMAMLANDI") {
+    return `T+ ${formatGeriSayim(ozet.itkiGecenSure_ms / 1000)}`;
+  }
+  return `T- ${formatGeriSayim(ozet.itkiBaslatmaGeriSayim_sn)}`;
+}
+
+/** valfDurum_* sayısal kodu vana durumuna eşler. PLACEHOLDER: 0=KAPALI, diğer=AÇIK. */
+function mapValfDurum(kod: number | undefined): ValveState {
+  return kod !== undefined && kod !== 0 ? "open" : "closed";
+}
+
+/** valfDurum_Igniter* kodunu ateşleyici durumuna eşler. PLACEHOLDER: 0=GÜVENLİ, 1=KOLLANDI, 2+=ATEŞLENDİ. */
+function mapAtesleyiciDurum(kod: number | undefined): IgniterState {
+  if (kod === undefined || kod <= 0) return "safe";
+  if (kod === 1) return "armed";
+  return "fired";
 }
 
 function valveColor(s: ValveState): string {
@@ -43,34 +63,17 @@ function igniterText(s: IgniterState): string {
   return "GÜVENLİ";
 }
 
-/**
- * opMod'u status pilli / ana vana / ateşleyici okumalarına indirger.
- * Onaylanan sözleşme yalnızca itkiOpMod + sensör değerlerini garanti ediyor;
- * ayrı vana/ateşleyici telemetrisi varsa bu fonksiyon kolayca değiştirilir.
- */
-function deriveFromOpMod(opMod: OpMod): { status: MissionStatus; valveMainOpen: boolean; igniter: IgniterState } {
+function mapOpModToStatus(opMod: OpMod): MissionStatus {
   switch (opMod) {
     case "BEKLEMEDE":
-      return { status: "SAFE", valveMainOpen: false, igniter: "safe" };
+      return "SAFE";
     case "GERİ SAYIM":
-      return { status: "ARMED", valveMainOpen: true, igniter: "armed" };
+      return "ARMED";
     case "ATEŞLEME":
-      return { status: "FIRING", valveMainOpen: true, igniter: "fired" };
+      return "FIRING";
     case "TAMAMLANDI":
-      return { status: "SAFE", valveMainOpen: false, igniter: "safe" };
+      return "SAFE";
   }
-}
-
-function buildLinePoints(hist: number[], axisMax: number): string {
-  const n = hist.length;
-  if (n < 2) return "";
-  const points: string[] = [];
-  for (let i = 0; i < n; i++) {
-    const x = (i / (n - 1)) * 300;
-    const y = 97 - Math.max(0, Math.min(1, hist[i] / axisMax)) * 92;
-    points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
-  }
-  return points.join(" ");
 }
 
 type BadgeDef = { id: SensorId; cx: number; cy: number; ax: number; ay: number };
@@ -135,6 +138,21 @@ const GRAPH_SERIES: { id: SensorId; color: string; label: string; axisMax: numbe
   { id: "TC-02", color: "#ffb020", label: "TC-2", axisMax: 2600 },
 ];
 
+/**
+ * Sensör okumaları MKUItkiDiagnostikPaket'te bulunmuyor; ayrı sensör
+ * telemetri paketi tanımlanana kadar rozetler/grafik eksen alt değerinde
+ * düz çizgi gösterir. Sensör paketi geldiğinde bu iki yardımcıya gerçek
+ * değer/tarihçe bağlanması yeterli.
+ */
+function sensorPlaceholderValue(id: SensorId): number {
+  return SENSORS[id].axis[0];
+}
+
+function flatLinePoints(id: SensorId, axisMax: number): string {
+  const y = 97 - Math.max(0, Math.min(1, sensorPlaceholderValue(id) / axisMax)) * 92;
+  return `0,${y.toFixed(1)} 300,${y.toFixed(1)}`;
+}
+
 function buildSteps(opMod: OpMod, aborted: boolean, statusColor: string): SequenceStepView[] {
   const currentIndex = OP_MOD_SEQUENCE.findIndex((s) => s === opMod);
   return OP_MOD_SEQUENCE.map((step, i) => {
@@ -152,15 +170,24 @@ function buildSteps(opMod: OpMod, aborted: boolean, statusColor: string): Sequen
   });
 }
 
-export function buildMissionControlView(state: MissionControlState): MissionControlView {
-  const derived = deriveFromOpMod(state.opMod);
-  const status: MissionStatus = state.aborted ? "ABORT" : derived.status;
+export function buildMissionControlView(
+  ozet: MKUItkiDiagnostikPaketUiModel | undefined,
+  local: MissionControlState,
+): MissionControlView {
+  const opMod = ozet ? mapItkiOpDurumlariToOpMod(ozet.itkiOpDurumlari) : "BEKLEMEDE";
+
+  // Acil durdur: yerel kilit-onaylı buton VEYA paketteki acilDurdurDurum alanı.
+  const aborted = local.aborted || (ozet !== undefined && ozet.acilDurdurDurum !== 0);
+  const status: MissionStatus = aborted ? "ABORT" : mapOpModToStatus(opMod);
   const statusColor = STATUS_COLORS[status];
-  const valveMainState: ValveState = !state.aborted && derived.valveMainOpen ? "open" : "closed";
-  const igniterState: IgniterState = state.aborted ? "safe" : derived.igniter;
+
+  // Vana/ateşleyici okumaları paketteki gerçek valfDurum_* alanlarından gelir.
+  const valveMainState = mapValfDurum(ozet?.valfDurum_OksitleyiciValf);
+  const igniter1State = mapAtesleyiciDurum(ozet?.valfDurum_Igniter1);
+  const igniter2State = mapAtesleyiciDurum(ozet?.valfDurum_Igniter2);
 
   const badges: SensorBadgeView[] = BADGE_DEFS.map((d) => {
-    const v = state.cur[d.id];
+    const v = sensorPlaceholderValue(d.id);
     const cfg = SENSORS[d.id];
     const color = d.id.startsWith("TC") ? tcColor(v, cfg.axis) : ptColor(v, cfg.axis);
     return {
@@ -179,35 +206,35 @@ export function buildMissionControlView(state: MissionControlState): MissionCont
   const graphLines: GraphLineView[] = GRAPH_SERIES.map((s) => ({
     color: s.color,
     label: s.label,
-    points: buildLinePoints(state.hist[s.id], s.axisMax),
+    points: flatLinePoints(s.id, s.axisMax),
   }));
 
-  const steps = buildSteps(state.opMod, state.aborted, statusColor);
+  const steps = buildSteps(opMod, aborted, statusColor);
 
-  const abortUnlocked = state.abortUnlockUntil > Date.now();
-  const unlockRemainingSec = abortUnlocked ? Math.ceil((state.abortUnlockUntil - Date.now()) / 1000) : 0;
+  const abortUnlocked = local.abortUnlockUntil > Date.now();
+  const unlockRemainingSec = abortUnlocked ? Math.ceil((local.abortUnlockUntil - Date.now()) / 1000) : 0;
 
-  const flowActive = valveMainState === "open" && state.manualValve === "open" && !state.aborted;
+  const flowActive = valveMainState === "open" && local.manualValve === "open" && !aborted;
   const exhaustActive = status === "FIRING" && valveMainState === "open";
 
   return {
-    clockText: fmtClock(state.opMod, state.phaseEnteredAt),
+    clockText: fmtClock(opMod, ozet),
     statusColor,
     status,
     valveMain: { color: valveColor(valveMainState), text: valveText(valveMainState) },
     valveManual: {
-      color: valveColor(state.manualValve),
-      text: valveText(state.manualValve),
-      isOpen: state.manualValve === "open",
+      color: valveColor(local.manualValve),
+      text: valveText(local.manualValve),
+      isOpen: local.manualValve === "open",
     },
-    igniter1: { color: igniterColor(igniterState), text: igniterText(igniterState), state: igniterState },
-    igniter2: { color: igniterColor(igniterState), text: igniterText(igniterState), state: igniterState },
+    igniter1: { color: igniterColor(igniter1State), text: igniterText(igniter1State), state: igniter1State },
+    igniter2: { color: igniterColor(igniter2State), text: igniterText(igniter2State), state: igniter2State },
     badges,
     flowActive,
     exhaustActive,
     graphLines,
     steps,
-    showReset: state.aborted,
+    showReset: local.aborted,
     abortUnlocked,
     unlockRemainingSec,
     lockIcon: abortUnlocked ? "\u{1F513}" : "\u{1F512}",

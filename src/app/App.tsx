@@ -12,10 +12,6 @@ import {
   stopDebugMessagePublisher,
 } from "../features/debug/services/debugMessagePublisher";
 import {
-  startMissionControlUiPublisher,
-  stopMissionControlUiPublisher,
-} from "../features/missionControl/services/missionControlUiPublisher";
-import {
   startMKUYoklamaPaketUiPublisher,
   stopMKUYoklamaPaketUiPublisher,
 } from "../storeServices/mku/mkuYoklamaPaketUiPublisher";
@@ -95,8 +91,6 @@ function App() {
     startMKUItkiDiagnostikPaketUiPublisher(appConfig.debugUiPublishIntervalMs);
     //#endregion
 
-    startMissionControlUiPublisher(appConfig.missionControlUiPublishIntervalMs);
-
     startDebugMessagePublisher({
       intervalMs: appConfig.debugUiPublishIntervalMs,
       rawMessageLimit: appConfig.debugRawMessageLimit,
@@ -112,8 +106,6 @@ function App() {
       stopMKUVersiyonPaketUiPublisher();
       stopMKUItkiDiagnostikPaketUiPublisher();
       //#endregion
-
-      stopMissionControlUiPublisher();
 
       stopDebugMessagePublisher();
     };

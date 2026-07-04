@@ -1,8 +1,20 @@
 import { appConfig } from "../../app/appConfig";
+import {
+  formatGeriSayim,
+  mapItkiOpDurumlariToOpMod,
+} from "../../features/missionControl/mappers/itkiOpModMapper";
+import { useMKUItkiDiagnostikPaketStore } from "../../store/mku/mkuItkiDiagnostikPaketStore";
 import { StatusBadge } from "./StatusBadge";
 
 export function TopBar() {
-  const operationMode = "MOD BEKLENİYOR";
+  const itkiOzet = useMKUItkiDiagnostikPaketStore((s) => s.ozet);
+
+  const geriSayimText = itkiOzet
+    ? `T- ${formatGeriSayim(itkiOzet.itkiBaslatmaGeriSayim_sn)}`
+    : "T- --:--";
+  const operationMode = itkiOzet
+    ? mapItkiOpDurumlariToOpMod(itkiOzet.itkiOpDurumlari)
+    : "MOD BEKLENİYOR";
   const shouldScrollMode = operationMode.length > 18;
 
   return (
@@ -17,13 +29,18 @@ export function TopBar() {
             <p>MISSION CONTROL SYSTEM</p>
           </div>
         </div>
-        <div className="mission-clock">
-          <span>Görev Zamanı</span>
-          <strong>T- 00:00:10</strong>
-          <div className="operation-mode" title={operationMode}>
-            <span className={shouldScrollMode ? "is-scrolling" : undefined}>
-              {operationMode}
-            </span>
+        <div className="top-bar__mission">
+          <div className="mission-box" aria-label="Geri sayım">
+            <span>Geri Sayım</span>
+            <strong>{geriSayimText}</strong>
+          </div>
+          <div className="mission-box" aria-label="Operasyon modu">
+            <span>Operasyon Modu</span>
+            <div className="operation-mode" title={operationMode}>
+              <span className={shouldScrollMode ? "is-scrolling" : undefined}>
+                {operationMode}
+              </span>
+            </div>
           </div>
         </div>
         <div className="quick-telemetry">

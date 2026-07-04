@@ -1,11 +1,10 @@
 import { useMissionControlStore } from "../store/missionControlStore";
 import type { MissionControlView } from "../mappers/missionControlViewMapper";
 import { sendCommand } from "../../commands/services/commandSender";
-import {
-  createMissionControlAbortCommand,
-  createMissionControlSetManualValveCommand,
-  createMissionControlStartSequenceCommand,
-} from "../commands/missionControlCommandFactory";
+import { MessageTypes } from "../../../contracts/messageTypes";
+import { createSekansBaslatKomut } from "../../../commands/sekansBaslatKomut/sekansBaslatKomutFactory";
+import { createAcilDurdurKomut } from "../../../commands/acilDurdurKomut/acilDurdurKomutFactory";
+import { createManuelValfKomut } from "../../../commands/manuelValfKomut/manuelValfKomutFactory";
 
 type Props = {
   view: MissionControlView;
@@ -19,18 +18,18 @@ export function MissionControlSequencePanel({ view }: Props) {
   const setManualValve = useMissionControlStore((s) => s.setManualValve);
 
   const handleStart = () => {
-    sendCommand(createMissionControlStartSequenceCommand());
+    sendCommand(createSekansBaslatKomut("1", MessageTypes.MKUItkiDiagnostikPaket));
   };
 
   const handleAbort = () => {
-    sendCommand(createMissionControlAbortCommand());
+    sendCommand(createAcilDurdurKomut("1", MessageTypes.MKUItkiDiagnostikPaket));
     abort();
   };
 
   const handleManualValveToggle = () => {
     const next = !view.valveManual.isOpen;
     setManualValve(next);
-    sendCommand(createMissionControlSetManualValveCommand(next));
+    sendCommand(createManuelValfKomut("1", MessageTypes.MKUItkiDiagnostikPaket, next));
   };
 
   return (

@@ -5,8 +5,6 @@ export const MessageTypes = {
   MKUVersiyonPaket: "MKUVersiyonPaket",
   MKUResetPaket: "MKUResetPaket",
   //#endregion
-
-  TestStandTelemetriPaket: "TestStandTelemetriPaket",
 } as const;
 
 export type MessageType = (typeof MessageTypes)[keyof typeof MessageTypes];

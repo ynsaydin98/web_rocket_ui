@@ -27,10 +27,6 @@ export const appConfig = {
     import.meta.env.VITE_TELEMETRY_UI_PUBLISH_INTERVAL_MS,
     1000,
   ),
-  missionControlUiPublishIntervalMs: readPositiveNumberEnv(
-    import.meta.env.VITE_MISSION_CONTROL_UI_PUBLISH_INTERVAL_MS,
-    100,
-  ),
   debugUiPublishIntervalMs: readPositiveNumberEnv(
     import.meta.env.VITE_DEBUG_UI_PUBLISH_INTERVAL_MS,
     1000,

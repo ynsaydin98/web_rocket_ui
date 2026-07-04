@@ -1,52 +1,27 @@
-// Test standı Mission Control sayfasının ham state'i. Sensör okumaları
-// (cur/hist) ve görev fazı (opMod) gerçek WebSocket telemetrisinden
-// missionControlUiPublisher.ts -> ingestTelemetry() ile besleniyor; yerel
-// simülasyon yok. Manuel vana, acil-durdur kilidi ve aborted bayrağı yerel
-// UI/güvenlik durumu — start/abort/vana komutlarının donanıma nasıl
-// gönderildiği için commands/missionControlCommandFactory.ts'e bakın.
+// Mission Control sayfasının YEREL UI/güvenlik durumu. Telemetri artık MKU
+// itki diagnostik boru hattından geliyor (paketler/mku/mkuItkiDiagnostikPaket
+// -> mapper -> storeServices publisher -> store/mku/mkuItkiDiagnostikPaketStore);
+// bu store yalnızca acil-durdur kilidi, aborted bayrağı ve manuel vana
+// anahtarının yerel durumunu tutar. Komutların donanıma nasıl gönderildiği
+// için src/commands/{sekansBaslatKomut,acilDurdurKomut,manuelValfKomut}
+// klasörlerine bakın.
 
 import { create } from "zustand";
-import {
-  ABORT_UNLOCK_MS,
-  HISTORY_LENGTH,
-  SENSORS,
-  SENSOR_ORDER,
-  type OpMod,
-  type SensorId,
-} from "../config/missionControlConfig";
-import type { MissionControlIngestModel } from "../models/missionControlIngestModel";
+import { ABORT_UNLOCK_MS } from "../config/missionControlConfig";
 
 export type ValveState = "open" | "closed";
 export type IgniterState = "safe" | "armed" | "fired";
 
 export type MissionControlState = {
-  opMod: OpMod;
-  /** Son opMod değişiminin Date.now() zaman damgası; görev saati kronometresini sürer. */
-  phaseEnteredAt: number;
   aborted: boolean;
   abortUnlockUntil: number;
   manualValve: ValveState;
-  cur: Record<SensorId, number>;
-  hist: Record<SensorId, number[]>;
 
-  ingestTelemetry: (model: MissionControlIngestModel) => void;
   abort: () => void;
   reset: () => void;
   setManualValve: (open: boolean) => void;
   unlockAbort: () => void;
 };
-
-function initialSensorValues(): Record<SensorId, number> {
-  const cur = {} as Record<SensorId, number>;
-  for (const id of SENSOR_ORDER) cur[id] = SENSORS[id].axis[0];
-  return cur;
-}
-
-function initialSensorHistory(): Record<SensorId, number[]> {
-  const hist = {} as Record<SensorId, number[]>;
-  for (const id of SENSOR_ORDER) hist[id] = new Array(HISTORY_LENGTH).fill(SENSORS[id].axis[0]);
-  return hist;
-}
 
 /**
  * unlockAbort()'un otomatik kilitlenme zamanlayıcısının handle'ı. UI
@@ -62,32 +37,9 @@ function clearAbortRelockTimer() {
 }
 
 export const useMissionControlStore = create<MissionControlState>((set, get) => ({
-  opMod: "BEKLEMEDE",
-  phaseEnteredAt: Date.now(),
   aborted: false,
   abortUnlockUntil: 0,
   manualValve: "closed",
-  cur: initialSensorValues(),
-  hist: initialSensorHistory(),
-
-  ingestTelemetry: (model) => {
-    const s = get();
-    const cur = { ...s.cur };
-    const hist = { ...s.hist };
-    for (const id of SENSOR_ORDER) {
-      const v = model.sensors[id];
-      if (v === undefined) continue;
-      cur[id] = v;
-      hist[id] = [...s.hist[id].slice(1), v];
-    }
-    const opModChanged = model.opMod !== s.opMod;
-    set({
-      cur,
-      hist,
-      opMod: model.opMod,
-      phaseEnteredAt: opModChanged ? Date.now() : s.phaseEnteredAt,
-    });
-  },
 
   abort: () => {
     const s = get();
