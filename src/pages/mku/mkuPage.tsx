@@ -119,14 +119,8 @@ export function MKUPage() {
               versiyonCevabi={versiyonCevabi}
               onYoklamaClick={yoklamaSorguGonder}
               onVersiyonClick={versiyonSorguGonder}
+              onResetClick={resetGonder}
             />
-            <button
-              className="unit-command-header__version"
-              type="button"
-              onClick={resetGonder}
-            >
-              RESET
-            </button>
           </div>
         </div>
       )}

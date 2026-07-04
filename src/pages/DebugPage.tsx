@@ -6,7 +6,7 @@ export function DebugPage() {
       <header className="page-heading">
         <div>
           <p className="eyebrow">Sistem İzleme</p>
-          <h2>Debug Konsolu</h2>
+          <h2>Hata Ayıklama Konsolu</h2>
         </div>
       </header>
       <ConnectionStatus />

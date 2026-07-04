@@ -27,7 +27,7 @@ export function TopBar() {
           </span>
           <div>
             <h1>{appConfig.appName}</h1>
-            <p>MISSION CONTROL SYSTEM</p>
+            <p>GÖREV KONTROL SİSTEMİ</p>
           </div>
         </div>
         <div className="top-bar__mission">

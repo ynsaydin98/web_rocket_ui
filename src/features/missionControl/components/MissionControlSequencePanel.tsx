@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useMissionControlStore } from "../store/missionControlStore";
 import type { MissionControlView } from "../mappers/missionControlViewMapper";
 import { sendCommand } from "../../commands/services/commandSender";
@@ -10,12 +11,28 @@ type Props = {
   view: MissionControlView;
 };
 
-/** Start/abort kontrolleri, manuel vana switch'i ve 4 adımlı (opMod) sekans listesi. */
+/** Başlat/acil durdur kontrolleri, manuel vana switch'i ve 4 adımlı (opMod) sekans listesi. */
 export function MissionControlSequencePanel({ view }: Props) {
   const abort = useMissionControlStore((s) => s.abort);
   const reset = useMissionControlStore((s) => s.reset);
   const unlockAbort = useMissionControlStore((s) => s.unlockAbort);
   const setManualValve = useMissionControlStore((s) => s.setManualValve);
+  const abortUnlockUntil = useMissionControlStore((s) => s.abortUnlockUntil);
+
+  // Kilit açıkken kalan süreyi canlı işletmek için yerel saat tick'i.
+  // Store yalnızca kilidin açılış/kapanış anlarında değiştiği için kalan
+  // saniye telemetri render'larına bırakılamaz.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (abortUnlockUntil <= Date.now()) return;
+    const timerId = window.setInterval(() => setNow(Date.now()), 200);
+    return () => window.clearInterval(timerId);
+  }, [abortUnlockUntil]);
+
+  const abortUnlocked = abortUnlockUntil > now;
+  const kalanKilitSn = abortUnlocked
+    ? Math.ceil((abortUnlockUntil - now) / 1000)
+    : 0;
 
   const handleStart = () => {
     sendCommand(createSekansBaslatKomut("1", MessageTypes.MKUItkiDiagnostikPaket));
@@ -44,25 +61,30 @@ export function MissionControlSequencePanel({ view }: Props) {
       <div className="mc-sequence__controls">
         <button onClick={handleStart} className="mc-start-btn mc-start-btn--enabled">
           <span className="mc-start-btn__title">SEKANS BAŞLAT</span>
-          <span className="mc-start-btn__subtitle">START SEQUENCE</span>
+          <span className="mc-start-btn__subtitle">İTKİ SEKANSINI BAŞLATIR</span>
         </button>
 
         <div className="mc-lock-row">
           <button
-            onClick={unlockAbort}
+            onClick={() => {
+              setNow(Date.now());
+              unlockAbort();
+            }}
             title="Güvenlik kilidi"
-            disabled={view.abortUnlocked}
-            className={`mc-lock-btn${view.abortUnlocked ? " mc-lock-btn--unlocked mc-lock-btn--disabled" : ""}`}
+            disabled={abortUnlocked}
+            className={`mc-lock-btn${abortUnlocked ? " mc-lock-btn--unlocked mc-lock-btn--disabled" : ""}`}
           >
-            <span>{view.lockIcon}</span>
+            <span>{abortUnlocked ? "\u{1F513}" : "\u{1F512}"}</span>
           </button>
           <button
             onClick={handleAbort}
-            disabled={!view.abortUnlocked}
-            className={`mc-abort-btn${view.abortUnlocked ? " mc-abort-btn--unlocked" : ""}`}
+            disabled={!abortUnlocked}
+            className={`mc-abort-btn${abortUnlocked ? " mc-abort-btn--unlocked" : ""}`}
           >
             <span className="mc-abort-btn__title">ACİL DURDUR</span>
-            <span className="mc-abort-btn__sub">{view.abortSubLabel}</span>
+            <span className="mc-abort-btn__sub">
+              {abortUnlocked ? `AKTİF · ${kalanKilitSn} sn` : "KİLİTLİ"}
+            </span>
           </button>
         </div>
       </div>
@@ -83,7 +105,7 @@ export function MissionControlSequencePanel({ view }: Props) {
 
       {view.showReset && (
         <div className="mc-reset">
-          <button onClick={reset} className="mc-reset-btn">RESET · SAFE'E DÖN</button>
+          <button onClick={reset} className="mc-reset-btn">SIFIRLA · GÜVENLİ DURUMA DÖN</button>
         </div>
       )}
 

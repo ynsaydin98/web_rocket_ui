@@ -108,10 +108,6 @@ export type MissionControlView = {
   graphLines: GraphLineView[];
   steps: SequenceStepView[];
   showReset: boolean;
-  abortUnlocked: boolean;
-  unlockRemainingSec: number;
-  lockIcon: string;
-  abortSubLabel: string;
 };
 
 const GRAPH_SERIES: { id: SensorId; color: string; label: string; axisMax: number }[] = [
@@ -148,7 +144,7 @@ function buildSteps(opMod: OpMod, aborted: boolean, statusColor: string): Sequen
     else stepState = "pending";
 
     const accentColor = abortActive ? "#ff4d4d" : statusColor;
-    const tag = stepState === "active" ? (abortActive ? "ABORT" : "ACTIVE") : stepState === "done" ? "✓" : "";
+    const tag = stepState === "active" ? (abortActive ? "ACİL DUR" : "AKTİF") : stepState === "done" ? "✓" : "";
 
     return { n: i, label: step, state: stepState, tag, accentColor };
   });
@@ -180,8 +176,8 @@ export function buildMissionControlView(
       cy: d.cy,
       ax: d.ax,
       ay: d.ay,
-      foX: d.cx - 36,
-      foY: d.cy - 28,
+      foX: d.cx - 42,
+      foY: d.cy - 31,
       color,
       reading: `${fmt(d.id, v)} ${cfg.unit}`,
     };
@@ -194,9 +190,6 @@ export function buildMissionControlView(
   }));
 
   const steps = buildSteps(opMod, aborted, statusColor);
-
-  const abortUnlocked = local.abortUnlockUntil > Date.now();
-  const unlockRemainingSec = abortUnlocked ? Math.ceil((local.abortUnlockUntil - Date.now()) / 1000) : 0;
 
   const flowActive = valveMainState === "open" && local.manualValve === "open" && !aborted;
   const exhaustActive = status === "FIRING" && valveMainState === "open";
@@ -216,9 +209,5 @@ export function buildMissionControlView(
     graphLines,
     steps,
     showReset: local.aborted,
-    abortUnlocked,
-    unlockRemainingSec,
-    lockIcon: abortUnlocked ? "\u{1F513}" : "\u{1F512}",
-    abortSubLabel: abortUnlocked ? `AKTİF · ${unlockRemainingSec} sn` : "KİLİTLİ",
   };
 }

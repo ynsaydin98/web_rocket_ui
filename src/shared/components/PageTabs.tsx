@@ -4,7 +4,7 @@ const tabs = [
   { to: "/grafik", label: "Grafikler", end: false },
   { to: "/tables", label: "Tablolar", end: false },
   { to: "/commands", label: "Komut & Sekans", end: false },
-  { to: "/debug", label: "Debug", end: false },
+  { to: "/debug", label: "Hata Ayıklama", end: false },
 ];
 export function PageTabs() {
   return (

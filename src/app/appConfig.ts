@@ -15,7 +15,7 @@ function readPositiveNumberEnv(value: string | undefined, fallback: number) {
 }
 
 export const appConfig = {
-  appName: "Rocket Web UI",
+  appName: "Roket Web Arayüzü",
   websocketUrl: import.meta.env.VITE_WS_URL ?? "ws://localhost:5000/ws",
   defaultCommandTargetId: "processor-1",
   testLatitude: readOptionalNumber(import.meta.env.VITE_TEST_LATITUDE),

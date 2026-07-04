@@ -141,20 +141,20 @@
 .mc-ig-line--armed { stroke-width: 4px; opacity: .8; }
 .mc-ig-line--fired { stroke-width: 5px; animation: mc-ig-blink .35s steps(2, jump-none) infinite; }
 .mc-badge-fo {
-  height: 56px;
+  height: 62px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 4px;
   text-align: center;
 }
 .mc-badge-fo__id {
-  font: 700 13px "JetBrains Mono";
+  font: 700 15px "JetBrains Mono";
   line-height: 1;
 }
 .mc-badge-fo__value {
-  font: 800 14px "JetBrains Mono";
+  font: 800 17px "JetBrains Mono";
   line-height: 1;
   color: #eaf1f7;
 }

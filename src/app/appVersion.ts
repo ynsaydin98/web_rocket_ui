@@ -1,4 +1,4 @@
 export const appVersion = {
-  name: "Rocket Web UI",
+  name: "Roket Web Arayüzü",
   version: import.meta.env.VITE_APP_VERSION ?? "0.0.0",
 } as const;

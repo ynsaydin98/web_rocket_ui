@@ -67,10 +67,12 @@ flowchart TB
     end
 
     subgraph UI["React Katmanı"]
-        TB[TopBar\ngeri sayım + operasyon modu]
+        TB[TopBar\ngeri sayım + operasyon modu + veri LED'i]
         CP[CommandsPage - Komut & Sekans]
         VM[missionControlViewMapper.ts\nview model üretimi]
         LOCAL[missionControlStore.ts\nyerel güvenlik durumu:\nabort kilidi, manuel vana]
+        GG[grafikVeriGecmisi.ts\nkaynak başına zaman serisi tamponu]
+        GP[GrafikPage - Grafikler\n2x2 grid + grafik oluşturucu]
     end
 
     subgraph KOMUT["Komut Akışı"]
@@ -85,6 +87,7 @@ flowchart TB
     H --> MAP --> UIM --> PUB --> ST
     ST --> TB
     ST --> VM
+    ST --> GG --> GP
     LOCAL --> VM
     VM --> CP
     CP --> BTN --> CF --> CS --> WS
@@ -222,6 +225,13 @@ src/
  │       └── mku/
  │
  ├── features/
+ │   ├── grafik/                  # Grafikler sayfası altyapısı
+ │   │   ├── config/grafikKaynaklari.ts   # paket kaynak kayıtları (alan listeleri)
+ │   │   ├── config/grafikRenkleri.ts     # doğrulanmış sabit sıralı seri paleti
+ │   │   ├── services/grafikVeriGecmisi.ts # kaynak başına zaman serisi tamponu
+ │   │   ├── store/grafikVeriStore.ts     # örnek versiyon sayacı
+ │   │   ├── store/grafikTanimStore.ts    # kullanıcı grafik tanımları (localStorage)
+ │   │   └── components/                  # GrafikPanel, GrafikOlusturucu
  │   ├── dashboard/               # ana sayfa panelleri (3D sahne, harita, IMU...)
  │   ├── missionControl/          # Komut & Sekans ekranının feature parçaları
  │   │   ├── config/missionControlConfig.ts    # sensör/faz sabitleri
@@ -290,11 +300,33 @@ Ortak görsel bileşenler ve sayfa componentleri. Sayfalar yalnızca feature/sha
 
 ```text
 /              Ana Sayfa (dashboard: 3D roket, harita, IMU, güç, olay logu)
-/grafik        Grafikler
-/tables        Model tabloları (MKU sistem bilgisi, yoklama/versiyon/reset)
+/grafik        Grafikler (2 sütunlu canlı grafik grid'i + grafik oluşturucu)
+/tables        Model tabloları (MKU sistem bilgisi, yoklama/versiyon/sıfırla)
 /commands      Komut & Sekans (itki test standı ekranı)
-/debug         WebSocket/debug konsolu
+/debug         Hata ayıklama konsolu (ham WebSocket mesajları)
 ```
+
+## Grafikler Sayfası
+
+`/grafik` sayfası yan yana iki sütunlu bir grid'de canlı zaman serisi
+grafikleri gösterir. İlk açılışta 4 varsayılan grafik gelir (itki geri
+sayımı, itki süreleri, operasyon geçen süre, valf durumları).
+
+- **Grafik oluşturucu**: Grid'in sonundaki büyük "YENİ GRAFİK EKLE" kartı,
+  kaynak paket ve o paketin sayısal değişkenlerini seçtiren bir forma
+  genişler. Seçilen alanlar (en fazla 6 seri) yeni bir canlı grafik olarak
+  grid'e eklenir; tanımlar `localStorage`'da saklanır.
+- **Yeni paket ekleme**: `features/grafik/config/grafikKaynaklari.ts`
+  içindeki kayıt listesine, paketin store'una bağlanan yeni bir kaynak
+  eklemek yeterlidir — oluşturucu arayüzü ve veri tamponu bu listeyi
+  otomatik kullanır.
+- **Veri tamponu**: `grafikVeriGecmisi.ts` her kaynak için son 300 örneği
+  tutar (100 ms yayında ~30 sn pencere) ve her örnekte grafik panellerini
+  yeniden çizdirir. Paneller veri versiyon sayacına kendileri subscribe
+  olur.
+- **Seri renkleri**: `grafikRenkleri.ts` içindeki palet, koyu panel
+  yüzeyine karşı renk körlüğü ayrımı ve kontrast kontrollerinden geçirilmiş
+  sabit sıralı 6 slottur; seriler bu sırayla renklendirilir.
 
 ## Üst Bar (TopBar)
 
@@ -323,8 +355,11 @@ Paneller:
 Komut davranışları:
 
 - `SEKANS BAŞLAT` → `SekansBaslat` komutu gönderilir.
-- Kilit butonu ACİL DURDUR'u 10 saniyeliğine aktif eder (buton sabit kırmızı olur); 10 saniye içinde basılmazsa kilit otomatik geri kapanır. Basılırsa `AcilDurdur` komutu gönderilir.
+- Kilit butonu ACİL DURDUR'u 10 saniyeliğine aktif eder (buton sabit kırmızı olur ve üzerinde canlı geri sayım işler); 10 saniye içinde basılmazsa kilit otomatik geri kapanır. Basılırsa `AcilDurdur` komutu gönderilir.
 - Manuel vana anahtarı `ManuelValf { acik }` komutunu gönderir ve yerel görsel durumu günceller.
+
+Tablolar sayfasındaki MKU paneli yoklama (`?`), `Versiyon` ve `Sıfırla`
+komutlarını tek birleşik tasarımda sunar.
 
 ## Ortam Değişkenleri
 

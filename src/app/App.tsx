@@ -12,6 +12,10 @@ import {
   stopDebugMessagePublisher,
 } from "../features/debug/services/debugMessagePublisher";
 import {
+  startGrafikVeriGecmisi,
+  stopGrafikVeriGecmisi,
+} from "../features/grafik/services/grafikVeriGecmisi";
+import {
   startMKUYoklamaPaketUiPublisher,
   stopMKUYoklamaPaketUiPublisher,
 } from "../storeServices/mku/mkuYoklamaPaketUiPublisher";
@@ -82,8 +86,14 @@ function App() {
     //#region MKU
     startMKUYoklamaPaketUiPublisher(appConfig.debugUiPublishIntervalMs);
     startMKUVersiyonPaketUiPublisher(appConfig.debugUiPublishIntervalMs);
-    startMKUItkiDiagnostikPaketUiPublisher(appConfig.debugUiPublishIntervalMs);
+    // Sürekli akan telemetri paketi; yoklama/versiyon gibi seyrek sorgu
+    // cevaplarından farklı olarak telemetri yayın aralığıyla güncellenir.
+    startMKUItkiDiagnostikPaketUiPublisher(
+      appConfig.telemetryUiPublishIntervalMs,
+    );
     //#endregion
+
+    startGrafikVeriGecmisi();
 
     startDebugMessagePublisher({
       intervalMs: appConfig.debugUiPublishIntervalMs,
@@ -100,6 +110,8 @@ function App() {
       stopMKUVersiyonPaketUiPublisher();
       stopMKUItkiDiagnostikPaketUiPublisher();
       //#endregion
+
+      stopGrafikVeriGecmisi();
 
       stopDebugMessagePublisher();
     };

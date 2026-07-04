@@ -89,7 +89,7 @@ export function MissionControlSchematic({ view }: Props) {
 
         {/* NOZZLE (horizontal, points right) */}
         <polygon points="850,205 850,255 930,285 930,175" style={{ fill: "#16232f", stroke: "#35495b", strokeWidth: 2 }} />
-        <text x={890} y={312} textAnchor="middle" style={{ font: "600 9.5px 'Chakra Petch'", letterSpacing: ".12em", fill: "#66788a" }}>NOZZLE</text>
+        <text x={890} y={312} textAnchor="middle" style={{ font: "600 9.5px 'Chakra Petch'", letterSpacing: ".12em", fill: "#66788a" }}>NOZUL</text>
         {/* EXHAUST (horizontal plume) */}
         <polygon points="930,180 930,280 1075,242 1075,218" fill="url(#mc-exhaust-grad)" className={`mc-exhaust${view.exhaustActive ? " mc-exhaust--active" : ""}`} />
 
@@ -110,8 +110,8 @@ export function MissionControlSchematic({ view }: Props) {
           <g key={bd.id}>
             <line x1={bd.cx} y1={bd.cy} x2={bd.ax} y2={bd.ay} stroke={bd.color} style={{ strokeWidth: 1.4, opacity: 0.5 }} />
             <circle cx={bd.ax} cy={bd.ay} r={3.5} fill={bd.color} />
-            <circle cx={bd.cx} cy={bd.cy} r={34} fill="#070d14" stroke={bd.color} style={{ strokeWidth: 2.5 }} />
-            <foreignObject x={bd.foX} y={bd.foY} width={72} height={56}>
+            <circle cx={bd.cx} cy={bd.cy} r={40} fill="#070d14" stroke={bd.color} style={{ strokeWidth: 2.5 }} />
+            <foreignObject x={bd.foX} y={bd.foY} width={84} height={62}>
               <div className="mc-badge-fo">
                 <span className="mc-badge-fo__id" style={{ color: bd.color }}>{bd.id}</span>
                 <span className="mc-badge-fo__value">{bd.reading}</span>

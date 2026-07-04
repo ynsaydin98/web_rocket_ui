@@ -12,8 +12,8 @@ export function AppShell() {
         <Outlet />
       </main>
       <footer className="app-footer">
-        <span>ROCKET GCS // OPERASYON KONSOLU</span>
-        <span>UI v{appVersion.version}</span>
+        <span>ROKET YER İSTASYONU // OPERASYON KONSOLU</span>
+        <span>Arayüz v{appVersion.version}</span>
       </footer>
     </div>
   );
