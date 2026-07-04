@@ -58,6 +58,12 @@ const MKUPage = lazy(() =>
   })),
 );
 
+const FlightTerminationPage = lazy(() =>
+  import("../pages/FlightTerminationPage").then((module) => ({
+    default: module.FlightTerminationPage,
+  })),
+);
+
 const DebugPage = lazy(() =>
   import("../pages/DebugPage").then((module) => ({
     default: module.DebugPage,
@@ -138,6 +144,10 @@ function App() {
             />
           </Route>
           <Route path="commands" element={withPageSuspense(<CommandsPage />)} />
+          <Route
+            path="flight-termination"
+            element={withPageSuspense(<FlightTerminationPage />)}
+          />
           <Route path="debug" element={withPageSuspense(<DebugPage />)} />
         </Route>
       </Routes>

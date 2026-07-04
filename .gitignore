@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Offline harita tile deposu (scripts/tileIndir.mjs ile indirilir)
+public/tiles/

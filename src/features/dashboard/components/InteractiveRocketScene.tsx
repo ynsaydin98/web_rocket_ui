@@ -1,13 +1,54 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
+import rocketObjUrl from "../../../assets/roket.obj?url";
 
-export function InteractiveRocketScene() {
+// Modelin sahnedeki hedef yüksekliği (dünya birimi). Model bu boyuta
+// otomatik ölçeklenir ve sahne merkezine hizalanır.
+const HEDEF_MODEL_YUKSEKLIGI = 6.3;
+
+type InteractiveRocketSceneProps = {
+  // IMU yönelim değerleri (derece). Veri yokken 0 kabul edilir.
+  roll?: number;
+  pitch?: number;
+  yaw?: number;
+  // Modelin başlangıç duruş düzeltmesi (derece). Model dosyasının
+  // eksen yönelimi sahneyle uyuşmuyorsa elle girilir; IMU değerleri
+  // bu offsetin üzerine eklenir.
+  rollOffset?: number;
+  pitchOffset?: number;
+  yawOffset?: number;
+};
+
+export function InteractiveRocketScene({
+  roll = 0,
+  pitch = 0,
+  yaw = 0,
+  rollOffset = 0,
+  pitchOffset = 0,
+  yawOffset = 0,
+}: InteractiveRocketSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const orientationRef = useRef({
+    roll: roll + rollOffset,
+    pitch: pitch + pitchOffset,
+    yaw: yaw + yawOffset,
+  });
+
+  useEffect(() => {
+    orientationRef.current = {
+      roll: roll + rollOffset,
+      pitch: pitch + pitchOffset,
+      yaw: yaw + yawOffset,
+    };
+  }, [roll, pitch, yaw, rollOffset, pitchOffset, yawOffset]);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+
+    let disposed = false;
+    let modelPivot: THREE.Group | null = null;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
@@ -20,21 +61,8 @@ export function InteractiveRocketScene() {
     renderer.toneMappingExposure = 1.15;
     container.appendChild(renderer.domElement);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.7;
-    controls.enablePan = false;
-    controls.minDistance = 6;
-    controls.maxDistance = 15;
-    controls.target.set(0, 0.25, 0);
-
-    const rocket = createRocket();
-    scene.add(rocket);
-
-    const grid = new THREE.GridHelper(16, 28, 0x245f91, 0x15334f);
-    grid.position.y = -3.15;
-    scene.add(grid);
+    // Sahne etkileşimsizdir; model yalnızca IMU + offset ile yönelir.
+    camera.lookAt(0, 0, 0);
 
     scene.add(new THREE.HemisphereLight(0xaedbff, 0x06101d, 2.2));
     const keyLight = new THREE.DirectionalLight(0xffffff, 3.8);
@@ -43,6 +71,26 @@ export function InteractiveRocketScene() {
     const rimLight = new THREE.DirectionalLight(0x38a3ff, 4.2);
     rimLight.position.set(-5, 2, -5);
     scene.add(rimLight);
+
+    const loader = new OBJLoader();
+    loader.load(
+      rocketObjUrl,
+      (object) => {
+        // Bileşen yükleme tamamlanmadan önce kaldırıldıysa modeli
+        // sahneye ekleme; kaynakları hemen serbest bırak.
+        if (disposed) {
+          disposeObject3D(object);
+          return;
+        }
+        applyRocketMaterial(object);
+        modelPivot = frameModel(object);
+        scene.add(modelPivot);
+      },
+      undefined,
+      (error) => {
+        console.error("Roket modeli (roket.obj) yüklenemedi:", error);
+      },
+    );
 
     const resize = () => {
       const width = container.clientWidth;
@@ -58,16 +106,25 @@ export function InteractiveRocketScene() {
 
     let animationFrame = 0;
     const animate = () => {
-      controls.update();
+      // IMU yönelimini modele uygula: yaw -> dikey eksen (pusula ile
+      // aynı yön), pitch -> X, roll -> Z (yapay ufuk ile aynı yön).
+      if (modelPivot) {
+        const orientation = orientationRef.current;
+        modelPivot.rotation.set(
+          THREE.MathUtils.degToRad(orientation.pitch),
+          -THREE.MathUtils.degToRad(orientation.yaw),
+          -THREE.MathUtils.degToRad(orientation.roll),
+        );
+      }
       renderer.render(scene, camera);
       animationFrame = requestAnimationFrame(animate);
     };
     animate();
 
     return () => {
+      disposed = true;
       cancelAnimationFrame(animationFrame);
       resizeObserver.disconnect();
-      controls.dispose();
       scene.traverse((object) => {
         if (!(object instanceof THREE.Mesh)) return;
         object.geometry.dispose();
@@ -90,73 +147,56 @@ export function InteractiveRocketScene() {
   );
 }
 
-function createRocket() {
-  const rocket = new THREE.Group();
-  const white = new THREE.MeshStandardMaterial({
+// Yüklenen OBJ mesh'lerine mission-control tarzı metalik materyal uygular.
+// OBJ dosyasında normal verisi yoksa aydınlatmanın doğru çalışması için
+// yüzey normalleri hesaplanır.
+function applyRocketMaterial(object: THREE.Object3D) {
+  const material = new THREE.MeshStandardMaterial({
     color: 0xe8edf3,
     metalness: 0.72,
     roughness: 0.28,
   });
-  const graphite = new THREE.MeshStandardMaterial({
-    color: 0x151b24,
-    metalness: 0.82,
-    roughness: 0.2,
+
+  object.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return;
+    if (!child.geometry.getAttribute("normal")) {
+      child.geometry.computeVertexNormals();
+    }
+    child.material = material;
   });
-  const accent = new THREE.MeshStandardMaterial({
-    color: 0x287fc3,
-    metalness: 0.7,
-    roughness: 0.25,
+}
+
+// Modeli bir pivot grubuna alır; boyutundan bağımsız olarak hedef
+// yüksekliğe ölçekler ve merkezini sahne orijinine hizalar. Pivot,
+// IMU yönelim rotasyonlarının modelin merkezinden uygulanmasını sağlar.
+function frameModel(object: THREE.Object3D): THREE.Group {
+  const pivot = new THREE.Group();
+  // Yaw (dikey eksen) önce uygulanır; ardından pitch ve roll.
+  pivot.rotation.order = "YXZ";
+  pivot.add(object);
+
+  const box = new THREE.Box3().setFromObject(object);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+
+  // Modelin merkezini pivot orijinine taşı.
+  object.position.sub(center);
+
+  const maxBoyut = Math.max(size.x, size.y, size.z) || 1;
+  pivot.scale.setScalar(HEDEF_MODEL_YUKSEKLIGI / maxBoyut);
+
+  return pivot;
+}
+
+// Sahneye eklenmeden serbest bırakılan bir modelin geometri ve
+// materyallerini temizler (yükleme, unmount sonrası tamamlanırsa).
+function disposeObject3D(object: THREE.Object3D) {
+  object.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return;
+    child.geometry.dispose();
+    const materials = Array.isArray(child.material)
+      ? child.material
+      : [child.material];
+    materials.forEach((material) => material.dispose());
   });
-
-  const body = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.62, 0.72, 4.8, 48),
-    white,
-  );
-  body.position.y = -0.15;
-  rocket.add(body);
-
-  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.62, 1.75, 48), white);
-  nose.position.y = 3.125;
-  rocket.add(nose);
-
-  const avionicsBand = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.635, 0.655, 0.72, 48),
-    graphite,
-  );
-  avionicsBand.position.y = 1.25;
-  rocket.add(avionicsBand);
-
-  const accentBand = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.64, 0.68, 0.1, 48),
-    accent,
-  );
-  accentBand.position.y = 0.84;
-  rocket.add(accentBand);
-
-  const nozzle = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.43, 0.56, 0.55, 40),
-    graphite,
-  );
-  nozzle.position.y = -2.82;
-  rocket.add(nozzle);
-
-  const finShape = new THREE.Shape();
-  finShape.moveTo(0, 0);
-  finShape.lineTo(1.15, 0);
-  finShape.lineTo(0, 1.65);
-  finShape.closePath();
-  const finGeometry = new THREE.ExtrudeGeometry(finShape, {
-    depth: 0.12,
-    bevelEnabled: false,
-  });
-  finGeometry.translate(0.48, -2.65, -0.06);
-
-  for (let index = 0; index < 4; index += 1) {
-    const fin = new THREE.Mesh(finGeometry, graphite);
-    fin.rotation.y = index * (Math.PI / 2);
-    rocket.add(fin);
-  }
-
-  rocket.rotation.z = -0.035;
-  return rocket;
 }

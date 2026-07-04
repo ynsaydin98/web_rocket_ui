@@ -34,5 +34,16 @@ export function mapMKUItkiDiagnostikPaketToOzet(
     rksDurum: mesaj.rksDurum,
     valfKomutMod: mesaj.valfKomutMod,
     seciliAtesleyici: mesaj.seciliAtesleyici,
+    imu_pitch: mesaj.imu_pitch,
+    imu_roll: mesaj.imu_roll,
+    imu_yaw: mesaj.imu_yaw,
+
+    PT1: mesaj.PT1,
+    PT2: mesaj.PT2,
+    PT3: mesaj.PT3,
+    PT4: mesaj.PT4,
+    PT5: mesaj.PT5,
+    TC1: mesaj.TC1,
+    TC2: mesaj.TC2,
   };
 }

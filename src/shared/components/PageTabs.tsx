@@ -4,6 +4,7 @@ const tabs = [
   { to: "/grafik", label: "Grafikler", end: false },
   { to: "/tables", label: "Tablolar", end: false },
   { to: "/commands", label: "Komut & Sekans", end: false },
+  { to: "/flight-termination", label: "Uçuş Sonlandırma", end: false },
   { to: "/debug", label: "Hata Ayıklama", end: false },
 ];
 export function PageTabs() {

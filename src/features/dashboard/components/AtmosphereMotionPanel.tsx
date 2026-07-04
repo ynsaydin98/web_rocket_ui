@@ -1,5 +1,4 @@
 import { Panel } from "../../../shared/components/Panel";
-import { StatusBadge } from "../../../shared/components/StatusBadge";
 
 const placeholder = "--";
 
@@ -31,35 +30,6 @@ export function AtmosphereMotionPanel() {
           <DataCell label="Roll" value={roll ?? placeholder} unit="°" />
           <DataCell label="Pitch" value={pitch ?? placeholder} unit="°" />
           <DataCell label="Yaw" value={yaw ?? placeholder} unit="°" />
-        </div>
-      </section>
-      <section className="subsystem-block battery-block">
-        <h3>Güç Sistemi</h3>
-        <div className="battery-reading">
-          <span>Batarya</span>
-          <strong>{placeholder} V</strong>
-        </div>
-        <div className="level-bar">
-          <span
-            style={{
-              width: "0%",
-            }}
-          />
-        </div>
-      </section>
-      <section className="subsystem-block event-log">
-        <h3>Alarm / Event Log</h3>
-        <div className="event-log__head">
-          <span>Zaman</span>
-          <span>Seviye</span>
-          <span>Kaynak</span>
-          <span>Mesaj</span>
-        </div>
-        <div className="event-log__row">
-          <span>--:--:--</span>
-          <StatusBadge tone={"warning"}>{"bekleniyor"}</StatusBadge>
-          <span>ROKET</span>
-          <span>{"Telemetri verisi bekleniyor"}</span>
         </div>
       </section>
     </Panel>

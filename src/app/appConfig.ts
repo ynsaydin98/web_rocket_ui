@@ -23,6 +23,11 @@ export const appConfig = {
   testRoll: readOptionalNumber(import.meta.env.VITE_TEST_ROLL),
   testPitch: readOptionalNumber(import.meta.env.VITE_TEST_PITCH),
   testYaw: readOptionalNumber(import.meta.env.VITE_TEST_YAW),
+  // 3D roket modelinin başlangıç duruş düzeltmesi (derece). IMU
+  // değerleri bu offsetlerin üzerine eklenir.
+  modelRollOffset: readOptionalNumber(import.meta.env.VITE_MODEL_ROLL_OFFSET),
+  modelPitchOffset: readOptionalNumber(import.meta.env.VITE_MODEL_PITCH_OFFSET),
+  modelYawOffset: readOptionalNumber(import.meta.env.VITE_MODEL_YAW_OFFSET),
   telemetryUiPublishIntervalMs: readPositiveNumberEnv(
     import.meta.env.VITE_TELEMETRY_UI_PUBLISH_INTERVAL_MS,
     1000,

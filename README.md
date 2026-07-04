@@ -28,6 +28,7 @@ Bu projenin amacı:
 - Zustand
 - React Router
 - Three.js (ana sayfa 3D roket sahnesi)
+- Leaflet (offline konum haritası)
 
 ## Mimari Kurallar
 
@@ -299,10 +300,11 @@ Ortak görsel bileşenler ve sayfa componentleri. Sayfalar yalnızca feature/sha
 ## Sayfalar ve Route'lar
 
 ```text
-/              Ana Sayfa (dashboard: 3D roket, harita, IMU, güç, olay logu)
+/              Ana Sayfa (dashboard: 3D roket, harita, IMU, barometre)
 /grafik        Grafikler (2 sütunlu canlı grafik grid'i + grafik oluşturucu)
 /tables        Model tabloları (MKU sistem bilgisi, yoklama/versiyon/sıfırla)
 /commands      Komut & Sekans (itki test standı ekranı)
+/flight-termination  Uçuş Sonlandırma (FTS karar ekranı: PT/TC + zenit-azimut)
 /debug         Hata ayıklama konsolu (ham WebSocket mesajları)
 ```
 
@@ -333,6 +335,38 @@ sayımı, itki süreleri, operasyon geçen süre, valf durumları).
 - **Geri sayım kutusu**: `MKUItkiDiagnostikPaket.itkiBaslatmaGeriSayim_sn` değerini `T- mm:ss` formatında gösterir. Veri yokken `T- --:--`.
 - **Operasyon modu kutusu**: `itkiOpDurumlari` değerinin `OpMod` karşılığını gösterir (BEKLEMEDE / GERİ SAYIM / ATEŞLEME / TAMAMLANDI). Veri yokken `MOD BEKLENİYOR`.
 - **Veri LED'i**: WebSocket'ten herhangi bir mesaj aktığı sürece yeşil yanar; 2 saniye boyunca hiç mesaj gelmezse kırmızıya döner (`connectionStore.dataLive`).
+
+## 3D Görünüm Paneli (Ana Sayfa)
+
+- Roket modeli `src/assets/roket.obj` dosyasından yüklenir (`OBJLoader`); model boyutundan bağımsız olarak sahneye otomatik ölçeklenir ve merkezlenir.
+- Sahne etkileşimsizdir (sürükleme/yakınlaştırma yok); modelin yönelimi `MKUItkiDiagnostikPaket.imu_pitch / imu_roll / imu_yaw` değerlerinden gelir (veri yokken 0 kabul edilir, model dik durur).
+- Panelin altındaki **DURUŞ OFFSETİ (°)** formundan pitch/roll/yaw düzeltmesi canlı girilir; IMU değerleri bu offsetin üzerine eklenir. Değerler `localStorage`'da saklanır (`features/dashboard/store/modelOffsetStore.ts`), ilk varsayılanlar `VITE_MODEL_*_OFFSET` env değişkenlerinden gelir.
+
+## Offline Harita (Konum & Yönelim Paneli)
+
+Ana sayfadaki konum haritası (`RocketLocationMap`) internet bağlantısı olmadan çalışır: Leaflet, tile'ları `public/tiles/{z}/{x}/{y}.png` yapısındaki yerel depodan okur.
+
+Tile'lar saha operasyonundan önce **bir kez** indirilir:
+
+```bash
+npm run tiles -- --lat 41.095125 --lon 28.637975 --yaricap-km 5 --zmin 12 --zmax 17
+```
+
+- Script (`scripts/tileIndir.mjs`) verilen merkez + yarıçapın bbox'ına giren tile'ları OSM tile sunucusundan sıralı/aralıklı indirir; var olan tile'ları atlar.
+- `public/tiles/` git'e girmez (`.gitignore`); her makinede/yeni saha için script yeniden çalıştırılır.
+- Bileşendeki `TILE_MIN_ZOOM/TILE_MAX_ZOOM` sabitleri (12-17) indirilen zoom aralığıyla eşleşmelidir.
+- OSM tile kullanım politikası gereği yarıçap ve zoom aralığı küçük tutulmalıdır (script 20.000 tile üzerini reddeder).
+- Varsayılan sunucu `tile.openstreetmap.de`'dir (`tile.openstreetmap.org` script'lere "Access blocked" placeholder'ı döndürüyor). Gerekirse `--sunucu <url>` ve `--bekleme-ms <ms>` ile değiştirilebilir; script bloklu sunucuyu başlangıç kalibrasyonuyla algılayıp temiz hata verir.
+- İndirilmemiş bölge/zoom'larda harita koyu arka planla boş görünür; uygulama hata vermez.
+- Konum, GNSS telemetri paketi tanımlanana kadar `VITE_TEST_LATITUDE/LONGITUDE` test değerlerinden gelir.
+
+## Uçuş Sonlandırma (Flight Termination)
+
+`/flight-termination` sayfası uçuş sonlandırma (FTS) kararı için gereken telemetriyi tek ekranda toplar (`src/features/flightTermination`):
+
+- **PT kutuları**: `MKUItkiDiagnostikPaket.PT1–PT5` basınç değerleri büyük metrik kutularında.
+- **TC kutuları**: `TC1–TC2` sıcaklık değerleri aynı sayfada.
+- **Zenit/Azimut göstergesi**: Roketin dikeyden sapması IMU değerlerinden türetilir (`mappers/zenitAzimutMapper.ts`; 3D sahneyle aynı eksen kuralı). 2D dairesel göstergede merkez = tam dik, halkalar 10°/20°/30°, işaretçi yönü sapmanın pusula azimutu. Renk eşikleri (yeşil <10°, sarı <20°, kırmızı ≥20°) protokol netleşene kadar placeholder'dır.
 
 ## Komut & Sekans (İtki Test Standı)
 
@@ -372,6 +406,9 @@ VITE_TEST_LONGITUDE=28.637975
 VITE_TEST_ROLL=20
 VITE_TEST_PITCH=20
 VITE_TEST_YAW=20
+VITE_MODEL_ROLL_OFFSET=0
+VITE_MODEL_PITCH_OFFSET=0
+VITE_MODEL_YAW_OFFSET=0
 VITE_TELEMETRY_UI_PUBLISH_INTERVAL_MS=100
 VITE_DEBUG_UI_PUBLISH_INTERVAL_MS=1000
 VITE_DEBUG_RAW_MESSAGE_LIMIT=100
@@ -379,7 +416,8 @@ VITE_WS_RECONNECT_DELAY_MS=3000
 ```
 
 - `VITE_WS_URL`: WebSocket bağlantı adresi.
-- `VITE_TEST_*`: geliştirme ortamında harita ve yönelim göstergelerini test etmek için kullanılır; canlı telemetri değerleri test değerlerinin önüne geçer.
+- `VITE_TEST_*`: geliştirme ortamında harita ve yönelim göstergelerini test etmek için kullanılır; canlı telemetri değerleri test değerlerinin önüne geçer. (3D roket modeli bu değerleri kullanmaz; yönelimini yalnızca paket IMU verisi + duruş offseti belirler.)
+- `VITE_MODEL_*_OFFSET`: ana sayfadaki 3D roket modelinin duruş offseti (derece) için ilk varsayılanlar. Kullanıcı offseti panelin altındaki formdan canlı değiştirir; girilen değerler `localStorage`'da saklanır ve sonraki açılışlarda env varsayılanlarının önüne geçer.
 - `VITE_*_INTERVAL_MS`: publisher yayın aralıkları.
 - `VITE_WS_RECONNECT_DELAY_MS`: bağlantı koptuğunda yeniden deneme gecikmesi.
 

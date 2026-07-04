@@ -59,6 +59,16 @@ function paketCheck(payload: unknown): payload is MKUItkiDiagnostikPaket {
     typeof value.aphisDurum === "number" &&
     typeof value.rksDurum === "number" &&
     typeof value.valfKomutMod === "number" &&
-    typeof value.seciliAtesleyici === "number"
+    typeof value.seciliAtesleyici === "number" &&
+    typeof value.imu_pitch === "number" &&
+    typeof value.imu_roll === "number" &&
+    typeof value.imu_yaw === "number" &&
+    typeof value.PT1 === "number" &&
+    typeof value.PT2 === "number" &&
+    typeof value.PT3 === "number" &&
+    typeof value.PT4 === "number" &&
+    typeof value.PT5 === "number" &&
+    typeof value.TC1 === "number" &&
+    typeof value.TC2 === "number"
   );
 }

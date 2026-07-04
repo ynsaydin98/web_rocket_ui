@@ -1,3 +1,4 @@
+import { appConfig } from "../../../app/appConfig";
 import { Panel } from "../../../shared/components/Panel";
 import { RocketLocationMap } from "./RocketLocationMap";
 import { AttitudeInstruments } from "./AttitudeInstruments";
@@ -5,22 +6,27 @@ import { AttitudeInstruments } from "./AttitudeInstruments";
 const placeholder = "--";
 
 export function PositionNavigationPanel() {
+  // Gerçek GNSS telemetri paketi tanımlanana kadar geliştirme test
+  // koordinatları kullanılır; canlı veri geldiğinde buradan beslenmelidir.
+  const latitude = appConfig.testLatitude;
+  const longitude = appConfig.testLongitude;
+
   return (
     <Panel title="KONUM & YÖNELİM" eyebrow="GNSS" className="mission-panel">
       <div className="data-strip data-strip--five">
         <DataPoint label="Uydu Sayısı" value={placeholder} />
-        <DataPoint label="Enlem" value={formatCoordinate(0)} />
-        <DataPoint label="Boylam" value={formatCoordinate(0)} />
+        <DataPoint label="Enlem" value={formatCoordinate(latitude)} />
+        <DataPoint label="Boylam" value={formatCoordinate(longitude)} />
         <DataPoint label="Yükseklik" value={placeholder} unit="m" />
         <DataPoint label="Hız" value={placeholder} unit="m/s" />
       </div>
 
       <section className="subsystem-block">
         <h3>Harita / Konum</h3>
-        <RocketLocationMap latitude={0} longitude={0} />
+        <RocketLocationMap latitude={latitude} longitude={longitude} />
         <div className="map-meta">
-          <span>Lat: {formatCoordinate(0)}</span>
-          <span>Lng: {formatCoordinate(0)}</span>
+          <span>Lat: {formatCoordinate(latitude)}</span>
+          <span>Lng: {formatCoordinate(longitude)}</span>
           <span>Guncelleme: {placeholder}</span>
         </div>
       </section>

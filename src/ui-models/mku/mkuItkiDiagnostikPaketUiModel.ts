@@ -28,4 +28,15 @@ export type MKUItkiDiagnostikPaketUiModel = {
   rksDurum: number;
   valfKomutMod: number;
   seciliAtesleyici: number;
+  imu_pitch: number;
+  imu_roll: number;
+  imu_yaw: number;
+
+  PT1: number;
+  PT2: number;
+  PT3: number;
+  PT4: number;
+  PT5: number;
+  TC1: number;
+  TC2: number;
 };
