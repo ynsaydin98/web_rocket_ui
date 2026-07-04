@@ -15,23 +15,10 @@ import {
 } from "../config/missionControlConfig";
 import type { MKUItkiDiagnostikPaketUiModel } from "../../../ui-models/mku/mkuItkiDiagnostikPaketUiModel";
 import type { IgniterState, MissionControlState, ValveState } from "../store/missionControlStore";
-import { formatGeriSayim, mapItkiOpDurumlariToOpMod } from "./itkiOpModMapper";
+import { mapItkiOpDurumlariToOpMod } from "./itkiOpModMapper";
 
 function fmt(id: SensorId, v: number): string {
   return id.startsWith("TC") ? String(Math.round(v)) : v.toFixed(1);
-}
-
-/**
- * Görev saati: geri sayım fazlarında paketteki itkiBaslatmaGeriSayim_sn (T-),
- * ateşleme ve sonrasında itkiGecenSure_ms (T+) gösterilir. Paket henüz
- * gelmediyse placeholder.
- */
-function fmtClock(opMod: OpMod, ozet?: MKUItkiDiagnostikPaketUiModel): string {
-  if (!ozet) return "T- --:--";
-  if (opMod === "ATEŞLEME" || opMod === "TAMAMLANDI") {
-    return `T+ ${formatGeriSayim(ozet.itkiGecenSure_ms / 1000)}`;
-  }
-  return `T- ${formatGeriSayim(ozet.itkiBaslatmaGeriSayim_sn)}`;
 }
 
 /** valfDurum_* sayısal kodu vana durumuna eşler. PLACEHOLDER: 0=KAPALI, diğer=AÇIK. */
@@ -111,9 +98,6 @@ export type SequenceStepView = {
 };
 
 export type MissionControlView = {
-  clockText: string;
-  statusColor: string;
-  status: MissionStatus;
   valveMain: { color: string; text: string };
   valveManual: { color: string; text: string; isOpen: boolean };
   igniter1: { color: string; text: string; state: IgniterState };
@@ -196,8 +180,8 @@ export function buildMissionControlView(
       cy: d.cy,
       ax: d.ax,
       ay: d.ay,
-      foX: d.cx - 32,
-      foY: d.cy - 26,
+      foX: d.cx - 36,
+      foY: d.cy - 28,
       color,
       reading: `${fmt(d.id, v)} ${cfg.unit}`,
     };
@@ -218,9 +202,6 @@ export function buildMissionControlView(
   const exhaustActive = status === "FIRING" && valveMainState === "open";
 
   return {
-    clockText: fmtClock(opMod, ozet),
-    statusColor,
-    status,
     valveMain: { color: valveColor(valveMainState), text: valveText(valveMainState) },
     valveManual: {
       color: valveColor(local.manualValve),

@@ -6,7 +6,6 @@
 @keyframes mc-exhaust-pulse-x { 0%, 100% { opacity: .78; transform: scaleX(.9); } 50% { opacity: 1; transform: scaleX(1.14); } }
 @keyframes mc-liquid-wave { 0%, 100% { transform: translateX(-8px); } 50% { transform: translateX(8px); } }
 @keyframes mc-ig-blink { 50% { opacity: .2; } }
-@keyframes mc-abort-blink { 50% { opacity: .45; } }
 
 .mc-page {
   height: 100%;
@@ -23,68 +22,6 @@
   font-family: "Chakra Petch", sans-serif;
   border: 1px solid #16202c;
   border-radius: 10px;
-}
-
-/* ---- header: mission clock + status ---- */
-.mc-header {
-  display: flex;
-  align-items: stretch;
-  gap: 1px;
-  height: 64px;
-  flex: 0 0 64px;
-  background: #0a0f16;
-  border-bottom: 1px solid #17222f;
-  border-radius: 10px 10px 0 0;
-}
-.mc-header__clock {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 0 26px;
-  border-right: 1px solid #141d28;
-  min-width: 210px;
-}
-.mc-header__clock-label {
-  font: 500 9px "Chakra Petch";
-  letter-spacing: .24em;
-  color: #5f7285;
-  margin-bottom: 2px;
-}
-.mc-header__clock-value {
-  font: 800 30px "JetBrains Mono";
-  line-height: 1;
-  letter-spacing: .02em;
-}
-.mc-header__status {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding-right: 22px;
-}
-.mc-header__status-label {
-  font: 500 9px "Chakra Petch";
-  letter-spacing: .24em;
-  color: #5f7285;
-}
-.mc-status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 20px;
-  border-radius: 8px;
-  font: 800 16px "Chakra Petch";
-  letter-spacing: .18em;
-  border: 1.5px solid currentColor;
-}
-.mc-status-pill--abort { animation: mc-abort-blink .6s steps(2) infinite; }
-.mc-status-pill__dot {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: currentColor;
-  box-shadow: 0 0 8px currentColor;
 }
 
 /* ---- main grid ---- */
@@ -204,20 +141,20 @@
 .mc-ig-line--armed { stroke-width: 4px; opacity: .8; }
 .mc-ig-line--fired { stroke-width: 5px; animation: mc-ig-blink .35s steps(2, jump-none) infinite; }
 .mc-badge-fo {
-  height: 52px;
+  height: 56px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
   text-align: center;
 }
 .mc-badge-fo__id {
-  font: 700 12px "JetBrains Mono";
+  font: 700 13px "JetBrains Mono";
   line-height: 1;
 }
 .mc-badge-fo__value {
-  font: 800 11px "JetBrains Mono";
+  font: 800 14px "JetBrains Mono";
   line-height: 1;
   color: #eaf1f7;
 }
@@ -343,7 +280,6 @@
   color: #fff;
   cursor: pointer;
   box-shadow: 0 0 18px -4px rgba(255, 60, 50, .7);
-  animation: mc-abort-blink 1s steps(2) infinite;
 }
 .mc-abort-btn__title {
   font: 800 18px "Chakra Petch";

@@ -56,6 +56,8 @@ export function connectWebSocket(url = appConfig.websocketUrl) {
 
     const rawMessage = String(event.data);
 
+    useConnectionStore.getState().markDataReceived();
+
     ingestDebugRawMessage(rawMessage);
 
     try {

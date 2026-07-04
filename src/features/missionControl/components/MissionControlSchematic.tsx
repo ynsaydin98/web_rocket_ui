@@ -81,7 +81,7 @@ export function MissionControlSchematic({ view }: Props) {
 
         {/* MANIFOLD */}
         <rect x={596} y={196} width={24} height={68} rx={6} style={{ fill: "#101c27", stroke: "#33485a", strokeWidth: 1.5 }} />
-        <text x={632} y={230} transform="rotate(90 632 230)" textAnchor="middle" style={{ font: "600 8.5px 'Chakra Petch'", letterSpacing: ".12em", fill: "#8296a8" }}>MANİFOLD</text>
+        <text x={588} y={230} transform="rotate(-90 588 230)" textAnchor="middle" style={{ font: "600 8.5px 'Chakra Petch'", letterSpacing: ".12em", fill: "#8296a8" }}>MANİFOLD</text>
 
         {/* COMBUSTION CHAMBER (horizontal) */}
         <text x={745} y={235} textAnchor="middle" style={{ font: "600 11px 'Chakra Petch'", letterSpacing: ".12em", fill: "#8fa4b6" }}>YANMA ODASI</text>
@@ -111,7 +111,7 @@ export function MissionControlSchematic({ view }: Props) {
             <line x1={bd.cx} y1={bd.cy} x2={bd.ax} y2={bd.ay} stroke={bd.color} style={{ strokeWidth: 1.4, opacity: 0.5 }} />
             <circle cx={bd.ax} cy={bd.ay} r={3.5} fill={bd.color} />
             <circle cx={bd.cx} cy={bd.cy} r={34} fill="#070d14" stroke={bd.color} style={{ strokeWidth: 2.5 }} />
-            <foreignObject x={bd.foX} y={bd.foY} width={64} height={52}>
+            <foreignObject x={bd.foX} y={bd.foY} width={72} height={56}>
               <div className="mc-badge-fo">
                 <span className="mc-badge-fo__id" style={{ color: bd.color }}>{bd.id}</span>
                 <span className="mc-badge-fo__value">{bd.reading}</span>

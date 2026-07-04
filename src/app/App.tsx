@@ -60,12 +60,6 @@ const DebugPage = lazy(() =>
   })),
 );
 
-const MissionControlPage = lazy(() =>
-  import("../pages/MissionControlPage").then((module) => ({
-    default: module.MissionControlPage,
-  })),
-);
-
 function withPageSuspense(page: ReactNode) {
   return (
     <Suspense
@@ -132,10 +126,6 @@ function App() {
             />
           </Route>
           <Route path="commands" element={withPageSuspense(<CommandsPage />)} />
-          <Route
-            path="mission-control"
-            element={withPageSuspense(<MissionControlPage />)}
-          />
           <Route path="debug" element={withPageSuspense(<DebugPage />)} />
         </Route>
       </Routes>

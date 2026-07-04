@@ -3,11 +3,12 @@ import {
   formatGeriSayim,
   mapItkiOpDurumlariToOpMod,
 } from "../../features/missionControl/mappers/itkiOpModMapper";
+import { useConnectionStore } from "../../realtime/connectionStore";
 import { useMKUItkiDiagnostikPaketStore } from "../../store/mku/mkuItkiDiagnostikPaketStore";
-import { StatusBadge } from "./StatusBadge";
 
 export function TopBar() {
   const itkiOzet = useMKUItkiDiagnostikPaketStore((s) => s.ozet);
+  const dataLive = useConnectionStore((s) => s.dataLive);
 
   const geriSayimText = itkiOzet
     ? `T- ${formatGeriSayim(itkiOzet.itkiBaslatmaGeriSayim_sn)}`
@@ -31,11 +32,9 @@ export function TopBar() {
         </div>
         <div className="top-bar__mission">
           <div className="mission-box" aria-label="Geri sayım">
-            <span>Geri Sayım</span>
             <strong>{geriSayimText}</strong>
           </div>
           <div className="mission-box" aria-label="Operasyon modu">
-            <span>Operasyon Modu</span>
             <div className="operation-mode" title={operationMode}>
               <span className={shouldScrollMode ? "is-scrolling" : undefined}>
                 {operationMode}
@@ -68,8 +67,15 @@ export function TopBar() {
             </strong>
           </div>
 
-          <div className="quick-telemetry__status">
-            <StatusBadge tone={"success"}>{"VERİ BEKLENİYOR"}</StatusBadge>
+          <div
+            className="quick-telemetry__status"
+            title={dataLive ? "Veri akışı aktif" : "Veri bekleniyor"}
+          >
+            <span
+              className={`data-led${dataLive ? " data-led--live" : ""}`}
+              role="status"
+              aria-label={dataLive ? "Veri akışı aktif" : "Veri bekleniyor"}
+            />
           </div>
         </div>
       </div>
