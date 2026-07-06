@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { appConfig } from "../../app/appConfig";
 import {
   formatGeriSayim,
@@ -6,9 +7,22 @@ import {
 import { useConnectionStore } from "../../realtime/connectionStore";
 import { useMKUItkiDiagnostikPaketStore } from "../../store/mku/mkuItkiDiagnostikPaketStore";
 
+function formatLokalSaat() {
+  return new Date().toLocaleTimeString("tr-TR", { hour12: false });
+}
+
 export function TopBar() {
   const itkiOzet = useMKUItkiDiagnostikPaketStore((s) => s.ozet);
   const dataLive = useConnectionStore((s) => s.dataLive);
+
+  const [lokalSaat, setLokalSaat] = useState(formatLokalSaat);
+  useEffect(() => {
+    const timerId = window.setInterval(
+      () => setLokalSaat(formatLokalSaat()),
+      1000,
+    );
+    return () => window.clearInterval(timerId);
+  }, []);
 
   const geriSayimText = itkiOzet
     ? `T- ${formatGeriSayim(itkiOzet.itkiBaslatmaGeriSayim_sn)}`
@@ -54,17 +68,8 @@ export function TopBar() {
           </div>
 
           <div>
-            <span>Hız</span>
-            <strong>
-              {"--"} <small>m/s</small>
-            </strong>
-          </div>
-
-          <div>
-            <span>İrtifa</span>
-            <strong>
-              {"--"} <small>m</small>
-            </strong>
+            <span>Lokal Saat</span>
+            <strong>{lokalSaat}</strong>
           </div>
 
           <div

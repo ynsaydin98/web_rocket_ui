@@ -1,7 +1,6 @@
 import { Panel } from "../shared/components/Panel";
 import { PtKutulari } from "../features/flightTermination/components/PtKutulari";
 import { TcKutulari } from "../features/flightTermination/components/TcKutulari";
-import { DurusGostergeleri } from "../features/flightTermination/components/DurusGostergeleri";
 
 export function FlightTerminationPage() {
   return (
@@ -22,9 +21,6 @@ export function FlightTerminationPage() {
             <TcKutulari />
           </Panel>
         </div>
-        <Panel title="DURUŞ GÖSTERGELERİ" eyebrow="Yönelim">
-          <DurusGostergeleri />
-        </Panel>
       </div>
     </div>
   );

@@ -4,6 +4,11 @@ export const MessageTypes = {
   MKUYoklamaPaket: "MKUYoklamaPaket",
   MKUVersiyonPaket: "MKUVersiyonPaket",
   MKUResetPaket: "MKUResetPaket",
+  MKUKomutPaket: "MKUKomutPaket",
+  MKUSekansGonderPaket: "MKUSekansGonderPaket",
+  MKUSekansAlPaket: "MKUSekansAlPaket",
+  MKUSekansEepromYazPaket: "MKUSekansEepromYazPaket",
+  MKUSekansEepromOkuPaket: "MKUSekansEepromOkuPaket",
   //#endregion
 } as const;
 

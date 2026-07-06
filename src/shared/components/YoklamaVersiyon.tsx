@@ -18,7 +18,7 @@ export function YoklamaVersiyon({
   yoklamaDurumu = 0,
   versiyonLabel = "Versiyon",
   versiyonCevabi = "Cevap bekleniyor...",
-  resetLabel = "Sıfırla",
+  resetLabel = "Reset",
   onYoklamaClick,
   onVersiyonClick,
   onResetClick,
@@ -56,7 +56,7 @@ export function YoklamaVersiyon({
         <span className="unit-command-header__response">{versiyonCevabi}</span>
       </div>
       {onResetClick && (
-        <div className="unit-command-header__bottom">
+        <div className="unit-command-header__bottom unit-command-header__bottom--reset">
           <button
             className="unit-command-header__version unit-command-header__reset"
             type="button"
@@ -64,9 +64,6 @@ export function YoklamaVersiyon({
           >
             {resetLabel}
           </button>
-          <span className="unit-command-header__response">
-            Üniteyi yeniden başlatır
-          </span>
         </div>
       )}
     </section>

@@ -130,6 +130,11 @@ export const MessageTypes = {
   MKUYoklamaPaket: "MKUYoklamaPaket",
   MKUVersiyonPaket: "MKUVersiyonPaket",
   MKUResetPaket: "MKUResetPaket",
+  MKUKomutPaket: "MKUKomutPaket",
+  MKUSekansGonderPaket: "MKUSekansGonderPaket",
+  MKUSekansAlPaket: "MKUSekansAlPaket",
+  MKUSekansEepromYazPaket: "MKUSekansEepromYazPaket",
+  MKUSekansEepromOkuPaket: "MKUSekansEepromOkuPaket",
 } as const;
 ```
 
@@ -176,6 +181,11 @@ Tanımlı komutlar (`src/commands/`):
 | `sekansBaslatKomut`| `SekansBaslat` | `{}`                | İtki sekansını başlatır (Komut & Sekans)  |
 | `acilDurdurKomut`  | `AcilDurdur`   | `{}`                | Acil durdurma (Komut & Sekans)            |
 | `manuelValfKomut`  | `ManuelValf`   | `{ acik: boolean }` | Manuel vana aç/kapat (Komut & Sekans)     |
+| `mkuKomut`         | `VanaKomut`    | `MKUKomutPaket { hedef, komut }` | Manuel komut paneli: itki vanası / ateşleyici-1 / ateşleyici-2 AÇ-KAPAT (Komut & Sekans) |
+| `sekansKomut`      | `SekansGonder` | `MKUSekansGonderPaket { adimlar }` | Sekans tablosunu üniteye gönderir (Komut & Sekans) |
+| `sekansKomut`      | `SekansAl`     | `{}`                | Ünitede yüklü sekansı sorgular            |
+| `sekansKomut`      | `SekansEepromYaz` | `{}`             | Güncel sekansın EEPROM'a yazılmasını ister |
+| `sekansKomut`      | `SekansEepromOku` | `{}`             | EEPROM'daki sekansı sorgular              |
 
 ## Proje Yapısı
 
@@ -191,11 +201,16 @@ src/
  │   ├── commandEnvelope.ts
  │   └── messageTypes.ts
  │
- ├── paketler/                    # servisten gelen HAM paket modelleri
+ ├── paketler/                    # servisten gelen/giden HAM paket modelleri
  │   └── mku/
  │       ├── mkuItkiDiagnostikPaket.ts
  │       ├── mkuYoklamaPaket.ts
- │       └── mkuVersiyonPaket.ts
+ │       ├── mkuVersiyonPaket.ts
+ │       ├── mkuKomutPaket.ts             # manuel vana/ateşleyici aç-kapat komutu
+ │       ├── mkuSekansGonderPaket.ts      # sekans adım tipi + gönderme paketi
+ │       ├── mkuSekansAlPaket.ts
+ │       ├── mkuSekansEepromYazPaket.ts
+ │       └── mkuSekansEepromOkuPaket.ts
  │
  ├── ui-models/                   # UI'ya özel sadeleştirilmiş modeller
  │   └── mku/
@@ -215,7 +230,9 @@ src/
  │   ├── resetKomut/
  │   ├── sekansBaslatKomut/
  │   ├── acilDurdurKomut/
- │   └── manuelValfKomut/
+ │   ├── manuelValfKomut/
+ │   ├── mkuKomut/                # MANUEL KOMUT paneli (VanaKomut)
+ │   └── sekansKomut/             # SekansGonder / SekansAl / SekansEepromYaz / SekansEepromOku
  │
  ├── realtime/                    # WebSocket bağlantısı + dispatcher + handler'lar
  │   ├── websocketClient.ts
@@ -234,10 +251,10 @@ src/
  │   │   ├── store/grafikTanimStore.ts    # kullanıcı grafik tanımları (localStorage)
  │   │   └── components/                  # GrafikPanel, GrafikOlusturucu
  │   ├── gostergeler/             # Göstergeler sayfası (büyük değer kartları)
- │   │   ├── config/gostergeTanimlari.ts  # kart tanımları + kaynak bağları
- │   │   ├── store/gostergeLimitStore.ts  # kullanıcı limitleri (localStorage)
+ │   │   ├── config/gostergeTanimlari.ts  # kart tanımları + kaynak bağları + gömülü limitler
  │   │   └── components/GostergeKarti.tsx
  │   ├── dashboard/               # ana sayfa panelleri (3D sahne, harita, IMU...)
+ │   │   └── config/rocketModelConfig.ts  # 3D model dosyası (.obj/.glb/.gltf)
  │   ├── missionControl/          # Komut & Sekans ekranının feature parçaları
  │   │   ├── config/missionControlConfig.ts    # sensör/faz sabitleri
  │   │   ├── engine/colorRamp.ts               # gösterge renk geçişleri
@@ -308,8 +325,8 @@ Ortak görsel bileşenler ve sayfa componentleri. Sayfalar yalnızca feature/sha
 /grafik        Grafikler (2 sütunlu canlı grafik grid'i + grafik oluşturucu)
 /tables        Model tabloları (MKU sistem bilgisi, yoklama/versiyon/sıfırla)
 /commands      Komut & Sekans (itki test standı ekranı)
-/gostergeler   Göstergeler (büyük puntolu değer kartları + limit renklendirme)
-/flight-termination  Uçuş Sonlandırma (FTS karar ekranı: PT/TC + zenit-azimut)
+/gostergeler   Göstergeler (büyük puntolu değer kartları + duruş kadranları)
+/flight-termination  Uçuş Sonlandırma (FTS karar ekranı: PT/TC sensör kutuları)
 /debug         Hata ayıklama konsolu (ham WebSocket mesajları)
 ```
 
@@ -317,20 +334,26 @@ Ortak görsel bileşenler ve sayfa componentleri. Sayfalar yalnızca feature/sha
 
 `/gostergeler` sayfası PT/TC, İMU ve GNSS parametrelerini satırda 4 kart
 olacak şekilde büyük puntolu dikdörtgen kutucuklarda gösterir (başlık +
-değer + birim).
+değer + birim). Grup başlıkları büyük puntolu ve ortalıdır.
 
-- **Limitler**: Her kartın LİMİT butonu min/maks giriş formunu açar;
-  girilen limitler `localStorage`'da saklanır (`gostergeLimitStore`).
+- **Limitler**: Limitler kullanıcı girişine bağlı değildir; kart tanımıyla
+  birlikte config dosyasında gömülüdür (`gostergeTanimlari.ts` içindeki
+  `limit: { min?, max? }`, PT/TC için `missionControlConfig.ts`'teki alarm
+  eşiklerinden beslenir). Limiti olmayan kartta limit satırı görünmez.
 - **Renklendirme**: Limit tanımlı değilse kart nötr görünümdedir. Limit
   tanımlıysa değer aralık içindeyken kart yeşil, aralık dışına çıktığında
   kırmızı vurgulanır. Değeri olmayan (paketi henüz tanımsız) kartlar "--"
   gösterir ve limitten bağımsız nötr kalır.
 - **Veri bağlama**: Kartlar grafik sayfasıyla ortak paket kaynak kayıtları
   (`features/grafik/config/grafikKaynaklari.ts`) üzerinden beslenir.
-  PT1..PT5, TC1..TC2 ve İMU roll/pitch/yaw kartları
-  `MKUItkiDiagnostikPaket`'ten canlı okunur; ivme ve GNSS alanları ilgili
-  paket protokole eklendiğinde `gostergeTanimlari.ts` içindeki karta
-  `kaynakId` + `alanKey` yazılarak bağlanır.
+  PT1..PT5 ve TC1..TC2 kartları `MKUItkiDiagnostikPaket`'ten canlı okunur;
+  ivme ve GNSS alanları ilgili paket protokole eklendiğinde
+  `gostergeTanimlari.ts` içindeki karta `kaynakId` + `alanKey` yazılarak
+  bağlanır.
+- **Duruş kadranları**: Sayfanın en altındaki DURUŞ GÖSTERGELERİ paneli
+  (`features/flightTermination/components/DurusGostergeleri.tsx`) PITCH /
+  ROLL / YAW kadranlarını gösterir (Uçuş Sonlandırma sayfasından taşındı);
+  İMU grubunda ayrıca roll/pitch/yaw değer kartı tutulmaz.
 
 ## Grafikler Sayfası
 
@@ -358,11 +381,13 @@ sayımı, itki süreleri, operasyon geçen süre, valf durumları).
 
 - **Geri sayım kutusu**: `MKUItkiDiagnostikPaket.itkiBaslatmaGeriSayim_sn` değerini `T- mm:ss` formatında gösterir. Veri yokken `T- --:--`.
 - **Operasyon modu kutusu**: `itkiOpDurumlari` değerinin `OpMod` karşılığını gösterir (BEKLEMEDE / GERİ SAYIM / ATEŞLEME / TAMAMLANDI). Veri yokken `MOD BEKLENİYOR`.
+- **Saatler**: Sistem Saati ve GNSS Saati'nin yanında yerel bilgisayar saatini saniyede bir güncelleyen **Lokal Saat** gösterilir. Hız ve irtifa alanları üst bardan kaldırılmıştır.
 - **Veri LED'i**: WebSocket'ten herhangi bir mesaj aktığı sürece yeşil yanar; 2 saniye boyunca hiç mesaj gelmezse kırmızıya döner (`connectionStore.dataLive`).
 
 ## 3D Görünüm Paneli (Ana Sayfa)
 
-- Roket modeli `src/assets/roket.obj` dosyasından yüklenir (`OBJLoader`); model boyutundan bağımsız olarak sahneye otomatik ölçeklenir ve merkezlenir.
+- Roket modelinin kaynak dosyası `features/dashboard/config/rocketModelConfig.ts` içinde tanımlıdır (varsayılan `src/assets/roket.obj`). Sahne, dosya uzantısına göre yükleyici seçer: `.obj` için `OBJLoader` (metalik varsayılan materyal uygulanır), `.glb`/`.gltf` için `GLTFLoader` (dosyanın kendi materyalleri korunur). CATIA çıktıları için önerilen akış: STEP (`.stp`) dışa aktarımını glTF'e dönüştürüp (`CAD Assistant`, `FreeCAD` vb.) `.glb` olarak assets'e koymak — STEP, BREP tabanlı CAD formatı olduğundan tarayıcıda doğrudan render edilemez.
+- Model boyutundan bağımsız olarak sahneye otomatik ölçeklenir ve merkezlenir.
 - Sahne etkileşimsizdir (sürükleme/yakınlaştırma yok); modelin yönelimi `MKUItkiDiagnostikPaket.imu_pitch / imu_roll / imu_yaw` değerlerinden gelir (veri yokken 0 kabul edilir, model dik durur).
 - Panelin altındaki **DURUŞ OFFSETİ (°)** formundan pitch/roll/yaw düzeltmesi canlı girilir; IMU değerleri bu offsetin üzerine eklenir. Değerler `localStorage`'da saklanır (`features/dashboard/store/modelOffsetStore.ts`), ilk varsayılanlar `VITE_MODEL_*_OFFSET` env değişkenlerinden gelir.
 
@@ -392,9 +417,14 @@ npm run tiles -- --tip uydu --lat 41.095125 --lon 28.637975 --yaricap-km 5 --zmi
 
 `/flight-termination` sayfası uçuş sonlandırma (FTS) kararı için gereken telemetriyi tek ekranda toplar (`src/features/flightTermination`):
 
-- **PT kutuları**: `MKUItkiDiagnostikPaket.PT1–PT5` basınç değerleri büyük metrik kutularında (üst satır, sol).
-- **TC kutuları**: `TC1–TC2` sıcaklık değerleri PT'nin yanında (üst satır, sağ).
-- **Duruş kadranları** (`DurusGostergeleri.tsx`): PITCH (yan görünüm, -90°/+90°), ROLL (alt görünüm, ±180°) ve YAW (pusula, 0–360°, K/D/G/B) için üç 2D SVG kadran. IMU Euler açıları (`imu_pitch/roll/yaw`) doğrudan bağlanır; işaret kuralı 3D sahneyle aynıdır (pitch 0 = dik roket). 3D model offset formu bu kadranlara uygulanmaz — kadranlar ham sensör değerini gösterir. Veri yokken roket siluetleri dik durur, sayısal değerler `--°` olur.
+- **PT kutuları**: `MKUItkiDiagnostikPaket.PT1–PT5` basınç değerleri büyük metrik kutularında (sol).
+- **TC kutuları**: `TC1–TC2` sıcaklık değerleri PT'nin yanında (sağ).
+
+Duruş kadranları (PITCH/ROLL/YAW, `DurusGostergeleri.tsx`) Göstergeler
+sayfasının en altına taşınmıştır; bileşen `features/flightTermination`
+altında durur ve IMU Euler açılarını (`imu_pitch/roll/yaw`) doğrudan
+gösterir (3D model offset formu kadranlara uygulanmaz, veri yokken
+değerler `--°` olur).
 
 ## Komut & Sekans (İtki Test Standı)
 
@@ -410,6 +440,8 @@ Ekran tamamen **gerçek `MKUItkiDiagnostikPaket` telemetrisi** ile beslenir; yer
 
 Paneller:
 
+- **Manuel komut paneli** (sol sütun, `ManuelKomutPanel.tsx`): İTKİ VANASI, ATEŞLEYİCİ-1 ve ATEŞLEYİCİ-2 için canlı durum (paketteki `valfDurum_*` alanlarından) ve AÇ / KAPAT butonları. Butonlar `MKUKomutPaket / VanaKomut` komutunu gönderir.
+- **Sekans seçimi paneli** (sol sütun, `SekansSecimPanel.tsx`): İşlem No / Valf Seçimi / Komut Seçimi / Süre (T + MS) kolonlu 16 satırlık sekans tablosu ve dört aksiyon: SEKANS GONDER (`MKUSekansGonderPaket`), SEKANS AL (`MKUSekansAlPaket`), SEKANS EEPROM YAZ (`MKUSekansEepromYazPaket`), SEKANS EEPROM OKU (`MKUSekansEepromOkuPaket`).
 - **P&ID mimik şeması**: oksitleyici tankı (N₂O) → manuel vana → itki vanası → manifold → yanma odası → nozzle; canlı vana/ateşleyici durumları ve sensör rozetleri.
 - **Canlı telemetri grafiği**: basınç/sıcaklık serileri.
 - **Sekans kontrol paneli**: SEKANS BAŞLAT, kilit + ACİL DURDUR, manuel vana anahtarı, 4 adımlı faz listesi ve RESET.
@@ -420,7 +452,7 @@ Komut davranışları:
 - Kilit butonu ACİL DURDUR'u 10 saniyeliğine aktif eder (buton sabit kırmızı olur ve üzerinde canlı geri sayım işler); 10 saniye içinde basılmazsa kilit otomatik geri kapanır. Basılırsa `AcilDurdur` komutu gönderilir.
 - Manuel vana anahtarı `ManuelValf { acik }` komutunu gönderir ve yerel görsel durumu günceller.
 
-Tablolar sayfasındaki MKU paneli yoklama (`?`), `Versiyon` ve `Sıfırla`
+Tablolar sayfasındaki MKU paneli yoklama (`?`), `Versiyon` ve `Reset`
 komutlarını tek birleşik tasarımda sunar.
 
 ## Ortam Değişkenleri

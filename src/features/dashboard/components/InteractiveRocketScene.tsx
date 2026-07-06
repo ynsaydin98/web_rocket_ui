@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
-import rocketObjUrl from "../../../assets/roket.obj?url";
+import { ROCKET_MODEL_URL } from "../config/rocketModelConfig";
 
 // Modelin sahnedeki hedef yüksekliği (dünya birimi). Model bu boyuta
 // otomatik ölçeklenir ve sahne merkezine hizalanır.
@@ -72,25 +73,20 @@ export function InteractiveRocketScene({
     rimLight.position.set(-5, 2, -5);
     scene.add(rimLight);
 
-    const loader = new OBJLoader();
-    loader.load(
-      rocketObjUrl,
-      (object) => {
+    loadRocketModel(ROCKET_MODEL_URL)
+      .then((object) => {
         // Bileşen yükleme tamamlanmadan önce kaldırıldıysa modeli
         // sahneye ekleme; kaynakları hemen serbest bırak.
         if (disposed) {
           disposeObject3D(object);
           return;
         }
-        applyRocketMaterial(object);
         modelPivot = frameModel(object);
         scene.add(modelPivot);
-      },
-      undefined,
-      (error) => {
-        console.error("Roket modeli (roket.obj) yüklenemedi:", error);
-      },
-    );
+      })
+      .catch((error) => {
+        console.error(`Roket modeli (${ROCKET_MODEL_URL}) yüklenemedi:`, error);
+      });
 
     const resize = () => {
       const width = container.clientWidth;
@@ -145,6 +141,22 @@ export function InteractiveRocketScene({
       aria-label="Etkileşimli üç boyutlu roket modeli"
     />
   );
+}
+
+// Model dosyasını uzantısına göre uygun three.js yükleyicisiyle yükler.
+// .glb/.gltf (CATIA -> STEP -> glTF dönüşümü çıktıları) kendi materyalleriyle
+// gelir; .obj materyalsiz olduğundan metalik varsayılan materyal uygulanır.
+async function loadRocketModel(url: string): Promise<THREE.Object3D> {
+  const uzanti = url.split("?")[0].split(".").pop()?.toLowerCase();
+
+  if (uzanti === "glb" || uzanti === "gltf") {
+    const gltf = await new GLTFLoader().loadAsync(url);
+    return gltf.scene;
+  }
+
+  const object = await new OBJLoader().loadAsync(url);
+  applyRocketMaterial(object);
+  return object;
 }
 
 // Yüklenen OBJ mesh'lerine mission-control tarzı metalik materyal uygular.

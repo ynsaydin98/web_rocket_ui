@@ -10,6 +10,12 @@ import { SENSORS } from "../../missionControl/config/missionControlConfig";
 
 export type GostergeGrup = "PT/TC Sensörleri" | "İMU" | "GNSS";
 
+/** Kartın min/max ihlal sınırları. Config'de gömülüdür, kullanıcı değiştiremez. */
+export type GostergeLimit = {
+  min?: number;
+  max?: number;
+};
+
 export type GostergeTanim = {
   id: string;
   baslik: string;
@@ -20,27 +26,28 @@ export type GostergeTanim = {
   /** Beslendiği paket kaynağı; PT/TC-İMU-GNSS paketleri tanımlanınca doldurulacak. */
   kaynakId?: string;
   alanKey?: string;
+  /** Gömülü ihlal limitleri; tanımsız kart limitsiz çalışır. */
+  limit?: GostergeLimit;
 };
 
 const MKU_PAKET = MessageTypes.MKUItkiDiagnostikPaket;
 
 export const GOSTERGE_TANIMLARI: GostergeTanim[] = [
   // PT/TC — MKUItkiDiagnostikPaket'in PT1..PT5 / TC1..TC2 alanlarından beslenir.
-  { id: "PT-01", baslik: SENSORS["PT-01"].desc, birim: "bar", grup: "PT/TC Sensörleri", kaynakId: MKU_PAKET, alanKey: "PT1" },
-  { id: "PT-02", baslik: SENSORS["PT-02"].desc, birim: "bar", grup: "PT/TC Sensörleri", kaynakId: MKU_PAKET, alanKey: "PT2" },
-  { id: "PT-03", baslik: SENSORS["PT-03"].desc, birim: "bar", grup: "PT/TC Sensörleri", kaynakId: MKU_PAKET, alanKey: "PT3" },
-  { id: "PT-04", baslik: SENSORS["PT-04"].desc, birim: "bar", grup: "PT/TC Sensörleri", kaynakId: MKU_PAKET, alanKey: "PT4" },
-  { id: "PT-05", baslik: SENSORS["PT-05"].desc, birim: "bar", grup: "PT/TC Sensörleri", kaynakId: MKU_PAKET, alanKey: "PT5" },
-  { id: "TC-01", baslik: SENSORS["TC-01"].desc, birim: "°C", grup: "PT/TC Sensörleri", digit: 0, kaynakId: MKU_PAKET, alanKey: "TC1" },
-  { id: "TC-02", baslik: SENSORS["TC-02"].desc, birim: "°C", grup: "PT/TC Sensörleri", digit: 0, kaynakId: MKU_PAKET, alanKey: "TC2" },
+  // Limitler P&ID sensör konfigürasyonundaki alarm eşikleriyle gömülüdür.
+  { id: "PT-01", baslik: SENSORS["PT-01"].desc, birim: "bar", grup: "PT/TC Sensörleri", kaynakId: MKU_PAKET, alanKey: "PT1", limit: { max: SENSORS["PT-01"].alarmHi } },
+  { id: "PT-02", baslik: SENSORS["PT-02"].desc, birim: "bar", grup: "PT/TC Sensörleri", kaynakId: MKU_PAKET, alanKey: "PT2", limit: { max: SENSORS["PT-02"].alarmHi } },
+  { id: "PT-03", baslik: SENSORS["PT-03"].desc, birim: "bar", grup: "PT/TC Sensörleri", kaynakId: MKU_PAKET, alanKey: "PT3", limit: { max: SENSORS["PT-03"].alarmHi } },
+  { id: "PT-04", baslik: SENSORS["PT-04"].desc, birim: "bar", grup: "PT/TC Sensörleri", kaynakId: MKU_PAKET, alanKey: "PT4", limit: { max: SENSORS["PT-04"].alarmHi } },
+  { id: "PT-05", baslik: SENSORS["PT-05"].desc, birim: "bar", grup: "PT/TC Sensörleri", kaynakId: MKU_PAKET, alanKey: "PT5", limit: { max: SENSORS["PT-05"].alarmHi } },
+  { id: "TC-01", baslik: SENSORS["TC-01"].desc, birim: "°C", grup: "PT/TC Sensörleri", digit: 0, kaynakId: MKU_PAKET, alanKey: "TC1", limit: { min: SENSORS["TC-01"].warnLo, max: SENSORS["TC-01"].alarmHi } },
+  { id: "TC-02", baslik: SENSORS["TC-02"].desc, birim: "°C", grup: "PT/TC Sensörleri", digit: 0, kaynakId: MKU_PAKET, alanKey: "TC2", limit: { max: SENSORS["TC-02"].alarmHi } },
 
-  // İMU — roll/pitch/yaw pakete eklendi; ivme alanları paket tanımlanınca bağlanacak.
+  // İMU — ivme alanları paket tanımlanınca bağlanacak. Roll/pitch/yaw
+  // kartları kaldırıldı; yönelim sayfa altındaki duruş kadranlarında gösterilir.
   { id: "imu-ivme-x", baslik: "İvme X", birim: "m/s²", grup: "İMU" },
   { id: "imu-ivme-y", baslik: "İvme Y", birim: "m/s²", grup: "İMU" },
   { id: "imu-ivme-z", baslik: "İvme Z", birim: "m/s²", grup: "İMU" },
-  { id: "imu-roll", baslik: "Roll", birim: "°", grup: "İMU", kaynakId: MKU_PAKET, alanKey: "imu_roll" },
-  { id: "imu-pitch", baslik: "Pitch", birim: "°", grup: "İMU", kaynakId: MKU_PAKET, alanKey: "imu_pitch" },
-  { id: "imu-yaw", baslik: "Yaw", birim: "°", grup: "İMU", kaynakId: MKU_PAKET, alanKey: "imu_yaw" },
 
   // GNSS — paket tanımlanınca bağlanacak.
   { id: "gnss-enlem", baslik: "Enlem", birim: "°", grup: "GNSS", digit: 6 },
