@@ -233,6 +233,12 @@ h2 { margin: 0; font-size: 18px; letter-spacing: .03em; }
 .position-map--empty small { color: var(--text-muted); font: 11px/1.4 ui-monospace, monospace; }
 .position-map__empty-icon { position: relative; z-index: 1; width: 16px; height: 16px; border: 2px solid var(--accent-blue); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); box-shadow: 0 0 10px rgba(56,163,255,.35); }
 .position-map__empty-icon::after { content: ""; position: absolute; top: 4px; left: 4px; width: 4px; height: 4px; border-radius: 50%; background: var(--accent-blue); }
+/* Katman secici (UYDU/SOKAK): leaflet pane'lerinin (z-index <= 1000) ustunde durmali */
+.position-map__layer-toggle { position: absolute; z-index: 1100; top: 8px; right: 8px; display: flex; overflow: hidden; border: 1px solid var(--border-panel); border-radius: 4px; background: rgba(7,17,30,.88); }
+.position-map__layer-toggle button { padding: 4px 9px; border: 0; background: transparent; color: var(--text-muted); font: 700 9px ui-monospace, monospace; letter-spacing: .1em; cursor: pointer; }
+.position-map__layer-toggle button + button { border-left: 1px solid var(--border-panel); }
+.position-map__layer-toggle button.is-active { background: rgba(56,163,255,.22); color: var(--accent-blue); }
+.position-map__layer-toggle button:hover:not(.is-active) { color: var(--text-main); }
 
 .interactive-rocket-scene { position: absolute; z-index: 2; inset: 0; touch-action: none; }
 .interactive-rocket-scene canvas { display: block; width: 100%; height: 100%; outline: none; }
@@ -352,17 +358,23 @@ h2 { margin: 0; font-size: 18px; letter-spacing: .03em; }
 .icon-button:hover { border-color: var(--accent-blue); background: rgba(56, 163, 255, 0.16); box-shadow: 0 0 14px rgba(56, 163, 255, 0.25); }
 
 /* Flight Termination sayfası */
-.ft-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 20px; align-items: start; }
-.ft-layout__sensorler { display: grid; gap: 20px; }
+.ft-layout { display: grid; gap: 20px; }
+.ft-layout__sensorler { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); gap: 20px; align-items: stretch; }
 .ft-pt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; padding: 14px; }
 .ft-pt-grid .metric-card { min-height: 150px; }
 .ft-pt-grid .metric-card__value { font-size: clamp(28px, 3.2vw, 44px); }
 .ft-tc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; padding: 14px; }
 .ft-tc-grid .metric-card__value { font-size: clamp(22px, 2.4vw, 32px); }
-.zenit-azimut { display: grid; justify-items: center; gap: 14px; padding: 18px; }
-.zenit-azimut svg { width: min(100%, 320px); height: auto; }
-.zenit-azimut__yon { fill: var(--accent-blue); font: 700 11px ui-monospace, monospace; text-anchor: middle; }
-.zenit-azimut__derece { fill: var(--text-muted); font: 600 8px ui-monospace, monospace; }
-.zenit-azimut__degerler { display: flex; gap: 22px; color: var(--text-muted); font: 700 11px ui-monospace, monospace; letter-spacing: .1em; }
-.zenit-azimut__degerler strong { color: var(--text-main); font-size: 14px; margin-left: 6px; }
-@media (max-width: 1100px) { .ft-layout { grid-template-columns: 1fr; } }
+.ft-durus-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; padding: 14px; }
+.ft-durus-kart { display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--border-panel); background: rgba(5, 12, 23, .55); padding: 12px 14px; }
+.ft-durus-kart__ust { display: flex; justify-content: space-between; color: var(--text-muted); font: 700 10px ui-monospace, monospace; letter-spacing: .18em; }
+.ft-durus-kart__ust span:last-child { opacity: .7; letter-spacing: .1em; }
+.ft-durus-kart__gosterge { flex: 1; display: flex; align-items: center; justify-content: center; }
+.ft-durus-kart__gosterge svg { width: min(100%, 300px); height: auto; display: block; }
+.ft-durus-kart__deger { text-align: center; border: 1px solid var(--border-panel); background: rgba(5, 12, 23, .8); padding: 8px 12px; }
+.ft-durus-kart__deger strong { display: block; color: var(--accent-green); font: 700 clamp(20px, 1.8vw, 26px) ui-monospace, monospace; white-space: nowrap; }
+.ft-durus-kart__deger span { color: var(--text-muted); font: 600 9px ui-monospace, monospace; letter-spacing: .2em; }
+.ft-durus__tik-etiket { fill: var(--text-muted); font: 700 13px ui-monospace, monospace; text-anchor: middle; }
+.ft-durus__tik-etiket--vurgu { fill: var(--accent-green); }
+.ft-durus__tik-etiket--ref { fill: var(--accent-blue); }
+@media (max-width: 1100px) { .ft-layout__sensorler { grid-template-columns: 1fr; } .ft-durus-grid { grid-template-columns: 1fr; } }

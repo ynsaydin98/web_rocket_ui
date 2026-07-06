@@ -23,5 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-# Offline harita tile deposu (scripts/tileIndir.mjs ile indirilir)
+# Offline harita tile depolari (scripts/tileIndir.mjs ile indirilir)
 public/tiles/
+public/tiles-uydu/

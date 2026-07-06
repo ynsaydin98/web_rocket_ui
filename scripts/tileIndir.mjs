@@ -1,12 +1,17 @@
-// Offline harita icin OSM tile indirme scripti.
+// Offline harita icin tile indirme scripti.
 //
 // Verilen merkez koordinat + yaricapin kapladigi bbox'a giren tile'lari
-// OpenStreetMap tile sunucusundan indirir ve public/tiles/{z}/{x}/{y}.png
-// yapisina yazar. Var olan tile'lar atlanir; script tekrar calistirilabilir.
+// tile sunucusundan indirir ve yerel depoya yazar. Var olan tile'lar
+// atlanir; script tekrar calistirilabilir.
+//
+// Iki tip desteklenir (--tip):
+//   sokak (varsayilan): OpenStreetMap sokak haritasi -> public/tiles/{z}/{x}/{y}.png
+//   uydu:               Esri World Imagery uydu goruntusu -> public/tiles-uydu/{z}/{x}/{y}.jpg
 //
 // Kullanim:
 //   node scripts/tileIndir.mjs --lat 41.095125 --lon 28.637975 --yaricap-km 5 --zmin 12 --zmax 17
 //   npm run tiles -- --lat 41.095125 --lon 28.637975
+//   npm run tiles -- --tip uydu --lat 41.095125 --lon 28.637975
 //   npm run tiles -- --sunucu https://tile.openstreetmap.de --bekleme-ms 1000
 //
 // Sunucu "Access blocked" / 403 / 429 dondururse: script bekleyip yeniden
@@ -22,9 +27,26 @@ import { mkdirSync, existsSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-// tile.openstreetmap.org script'lere HTTP 200 ile "Access blocked" yazan
-// placeholder PNG donduruyor; FOSSGIS'in Alman OSM sunucusu gercek tile verir.
-const VARSAYILAN_SUNUCU = "https://tile.openstreetmap.de";
+// Tile tipleri: sunucu, URL yapisi ve yerel depo yolu tipten belirlenir.
+// - sokak: tile.openstreetmap.org script'lere HTTP 200 ile "Access blocked"
+//   yazan placeholder PNG donduruyor; FOSSGIS'in Alman OSM sunucusu gercek
+//   tile verir.
+// - uydu: Esri World Imagery. URL sirasi {z}/{y}/{x} ve uzantisizdir; JPEG
+//   doner. Kucuk saha alaniyla sinirli tek seferlik indirme icindir.
+const TILE_TIPLERI = {
+  sokak: {
+    sunucu: "https://tile.openstreetmap.de",
+    klasor: "tiles",
+    uzanti: "png",
+    url: (sunucu, z, x, y) => `${sunucu}/${z}/${x}/${y}.png`,
+  },
+  uydu: {
+    sunucu: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile",
+    klasor: "tiles-uydu",
+    uzanti: "jpg",
+    url: (sunucu, z, x, y) => `${sunucu}/${z}/${y}/${x}`,
+  },
+};
 const VARSAYILAN_BEKLEME_MS = 600;
 // Blok (403/418/429) sonrasi yeniden deneme beklemeleri (ms).
 const BLOK_BEKLEMELERI_MS = [5000, 15000, 45000];
@@ -34,15 +56,19 @@ const BLOK_KODLARI = new Set([403, 418, 429]);
 const USER_AGENT = "rocket-web-ui-offline-tile-indirici/1.0 (yer istasyonu; tek seferlik saha hazirligi)";
 
 const projeKoku = join(dirname(fileURLToPath(import.meta.url)), "..");
-const cikisKlasoru = join(projeKoku, "public", "tiles");
 
 const argumanlar = parseArgs(process.argv.slice(2));
+const tipAdi = String(argumanlar.tip ?? "sokak");
+const tip = TILE_TIPLERI[tipAdi];
+if (!tip) hata(`--tip gecersiz (${Object.keys(TILE_TIPLERI).join(" | ")})`);
+
+const cikisKlasoru = join(projeKoku, "public", tip.klasor);
 const lat = argumanlar.lat ?? 41.095125;
 const lon = argumanlar.lon ?? 28.637975;
 const yaricapKm = argumanlar["yaricap-km"] ?? 5;
 const zmin = argumanlar.zmin ?? 12;
 const zmax = argumanlar.zmax ?? 17;
-const tileSunucu = String(argumanlar.sunucu ?? VARSAYILAN_SUNUCU).replace(/\/+$/, "");
+const tileSunucu = String(argumanlar.sunucu ?? tip.sunucu).replace(/\/+$/, "");
 const beklemeMs = argumanlar["bekleme-ms"] ?? VARSAYILAN_BEKLEME_MS;
 
 if (!/^https?:\/\//.test(tileSunucu)) hata("--sunucu gecersiz (http/https URL olmali)");
@@ -80,7 +106,7 @@ for (let z = zmin; z <= zmax; z += 1) {
 }
 
 console.log(
-  `Merkez ${lat},${lon} | yaricap ${yaricapKm} km | zoom ${zmin}-${zmax} | toplam ${isler.length} tile | sunucu ${tileSunucu} | bekleme ${beklemeMs} ms`,
+  `Tip ${tipAdi} | merkez ${lat},${lon} | yaricap ${yaricapKm} km | zoom ${zmin}-${zmax} | toplam ${isler.length} tile | sunucu ${tileSunucu} | bekleme ${beklemeMs} ms`,
 );
 if (isler.length > 20000) {
   hata(
@@ -112,7 +138,7 @@ let hatali = 0;
 let ardisikBlok = 0;
 
 for (const { z, x, y } of isler) {
-  const hedef = join(cikisKlasoru, String(z), String(x), `${y}.png`);
+  const hedef = join(cikisKlasoru, String(z), String(x), `${y}.${tip.uzanti}`);
   if (existsSync(hedef)) {
     atlanan += 1;
     continue;
@@ -154,7 +180,7 @@ console.log(
 async function tileIndir(z, x, y, hedef) {
   for (let deneme = 0; ; deneme += 1) {
     try {
-      const cevap = await fetch(`${tileSunucu}/${z}/${x}/${y}.png`, {
+      const cevap = await fetch(tip.url(tileSunucu, z, x, y), {
         headers: { "User-Agent": USER_AGENT },
       });
 
@@ -199,10 +225,9 @@ async function sunucuBloklu() {
 
   const [a, b] = await Promise.all(
     [z1, z2].map(async (z) => {
-      const cevap = await fetch(
-        `${tileSunucu}/${z}/${lon2tile(lon, z)}/${lat2tile(lat, z)}.png`,
-        { headers: { "User-Agent": USER_AGENT } },
-      );
+      const cevap = await fetch(tip.url(tileSunucu, z, lon2tile(lon, z), lat2tile(lat, z)), {
+        headers: { "User-Agent": USER_AGENT },
+      });
       if (!cevap.ok) return null;
       return Buffer.from(await cevap.arrayBuffer());
     }),

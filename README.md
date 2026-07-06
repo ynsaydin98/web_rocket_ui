@@ -368,16 +368,20 @@ sayımı, itki süreleri, operasyon geçen süre, valf durumları).
 
 ## Offline Harita (Konum & Yönelim Paneli)
 
-Ana sayfadaki konum haritası (`RocketLocationMap`) internet bağlantısı olmadan çalışır: Leaflet, tile'ları `public/tiles/{z}/{x}/{y}.png` yapısındaki yerel depodan okur.
+Ana sayfadaki konum haritası (`RocketLocationMap`) internet bağlantısı olmadan çalışır: Leaflet, tile'ları yerel depodan okur. İki katman vardır: sokak haritası (`public/tiles/{z}/{x}/{y}.png`, OSM) ve uydu görüntüsü (`public/tiles-uydu/{z}/{x}/{y}.jpg`, Esri World Imagery). Haritanın sağ üst köşesindeki **UYDU / SOKAK** düğmesiyle katman seçilir; seçim `localStorage`'da (`harita-katman`) saklanır. UYDU seçiliyken uydu katmanı sokak haritasının üstünde durur — uydu tile'ı indirilmemiş bölgelerde alttaki sokak haritası görünür; hiçbiri yoksa koyu arka plan kalır.
 
 Tile'lar saha operasyonundan önce **bir kez** indirilir:
 
 ```bash
+# Sokak haritası (OSM)
 npm run tiles -- --lat 41.095125 --lon 28.637975 --yaricap-km 5 --zmin 12 --zmax 17
+
+# Uydu görüntüsü (Esri World Imagery)
+npm run tiles -- --tip uydu --lat 41.095125 --lon 28.637975 --yaricap-km 5 --zmin 12 --zmax 17
 ```
 
-- Script (`scripts/tileIndir.mjs`) verilen merkez + yarıçapın bbox'ına giren tile'ları OSM tile sunucusundan sıralı/aralıklı indirir; var olan tile'ları atlar.
-- `public/tiles/` git'e girmez (`.gitignore`); her makinede/yeni saha için script yeniden çalıştırılır.
+- Script (`scripts/tileIndir.mjs`) verilen merkez + yarıçapın bbox'ına giren tile'ları tile sunucusundan sıralı/aralıklı indirir; var olan tile'ları atlar. `--tip sokak` (varsayılan) OSM'den PNG, `--tip uydu` Esri World Imagery'den JPEG indirir.
+- `public/tiles/` ve `public/tiles-uydu/` git'e girmez (`.gitignore`); her makinede/yeni saha için script yeniden çalıştırılır.
 - Bileşendeki `TILE_MIN_ZOOM/TILE_MAX_ZOOM` sabitleri (12-17) indirilen zoom aralığıyla eşleşmelidir.
 - OSM tile kullanım politikası gereği yarıçap ve zoom aralığı küçük tutulmalıdır (script 20.000 tile üzerini reddeder).
 - Varsayılan sunucu `tile.openstreetmap.de`'dir (`tile.openstreetmap.org` script'lere "Access blocked" placeholder'ı döndürüyor). Gerekirse `--sunucu <url>` ve `--bekleme-ms <ms>` ile değiştirilebilir; script bloklu sunucuyu başlangıç kalibrasyonuyla algılayıp temiz hata verir.
@@ -388,9 +392,9 @@ npm run tiles -- --lat 41.095125 --lon 28.637975 --yaricap-km 5 --zmin 12 --zmax
 
 `/flight-termination` sayfası uçuş sonlandırma (FTS) kararı için gereken telemetriyi tek ekranda toplar (`src/features/flightTermination`):
 
-- **PT kutuları**: `MKUItkiDiagnostikPaket.PT1–PT5` basınç değerleri büyük metrik kutularında.
-- **TC kutuları**: `TC1–TC2` sıcaklık değerleri aynı sayfada.
-- **Zenit/Azimut göstergesi**: Roketin dikeyden sapması IMU değerlerinden türetilir (`mappers/zenitAzimutMapper.ts`; 3D sahneyle aynı eksen kuralı). 2D dairesel göstergede merkez = tam dik, halkalar 10°/20°/30°, işaretçi yönü sapmanın pusula azimutu. Renk eşikleri (yeşil <10°, sarı <20°, kırmızı ≥20°) protokol netleşene kadar placeholder'dır.
+- **PT kutuları**: `MKUItkiDiagnostikPaket.PT1–PT5` basınç değerleri büyük metrik kutularında (üst satır, sol).
+- **TC kutuları**: `TC1–TC2` sıcaklık değerleri PT'nin yanında (üst satır, sağ).
+- **Duruş kadranları** (`DurusGostergeleri.tsx`): PITCH (yan görünüm, -90°/+90°), ROLL (alt görünüm, ±180°) ve YAW (pusula, 0–360°, K/D/G/B) için üç 2D SVG kadran. IMU Euler açıları (`imu_pitch/roll/yaw`) doğrudan bağlanır; işaret kuralı 3D sahneyle aynıdır (pitch 0 = dik roket). 3D model offset formu bu kadranlara uygulanmaz — kadranlar ham sensör değerini gösterir. Veri yokken roket siluetleri dik durur, sayısal değerler `--°` olur.
 
 ## Komut & Sekans (İtki Test Standı)
 
