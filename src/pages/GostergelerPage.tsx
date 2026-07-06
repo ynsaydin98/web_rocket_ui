@@ -12,13 +12,6 @@ export function GostergelerPage() {
 
   return (
     <div className="page-stack">
-      <header className="page-heading">
-        <div>
-          <p className="eyebrow">Canlı Değerler</p>
-          <h2>Göstergeler</h2>
-        </div>
-      </header>
-
       {GOSTERGE_GRUPLARI.map((grup) => (
         <section key={grup} className="gosterge-grup">
           <h3 className="gosterge-grup__baslik">{grup}</h3>
