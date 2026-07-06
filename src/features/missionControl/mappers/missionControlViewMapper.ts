@@ -1,9 +1,12 @@
 // MKU itki diagnostik paketinin UI modelinden (mkuItkiDiagnostikPaketStore)
 // ve yerel güvenlik durumundan (missionControlStore) render'a hazır view
-// model üreten saf fonksiyon. Vana/ateşleyici/faz okumaları artık paketteki
-// gerçek alanlardan (valfDurum_*, itkiOpDurumlari, geri sayım / geçen süre
-// sayaçları) türetiliyor.
+// model üreten fonksiyon. Vana/ateşleyici/faz okumaları paketteki gerçek
+// alanlardan (valfDurum_*, itkiOpDurumlari, süre sayaçları), sensör rozet
+// ve grafikleri de paketin PT1..PT5 / TC1..TC2 alanlarından besleniyor
+// (grafik geçmişi, Grafikler sayfasıyla ortak zaman serisi tamponundan okunur).
 
+import { MessageTypes } from "../../../contracts/messageTypes";
+import { getGrafikGecmisi } from "../../grafik/services/grafikVeriGecmisi";
 import { ptColor, tcColor } from "../engine/colorRamp";
 import {
   OP_MOD_SEQUENCE,
@@ -84,7 +87,9 @@ export type SensorBadgeView = {
   foX: number;
   foY: number;
   color: string;
-  reading: string;
+  /** Sayısal okuma; birim ayrı satırda render edilir ki uzun değerler rozetten taşmasın. */
+  deger: string;
+  birim: string;
 };
 
 export type GraphLineView = { color: string; label: string; points: string };
@@ -118,19 +123,35 @@ const GRAPH_SERIES: { id: SensorId; color: string; label: string; axisMax: numbe
   { id: "TC-02", color: "#ffb020", label: "TC-2", axisMax: 2600 },
 ];
 
-/**
- * Sensör okumaları MKUItkiDiagnostikPaket'te bulunmuyor; ayrı sensör
- * telemetri paketi tanımlanana kadar rozetler/grafik eksen alt değerinde
- * düz çizgi gösterir. Sensör paketi geldiğinde bu iki yardımcıya gerçek
- * değer/tarihçe bağlanması yeterli.
- */
-function sensorPlaceholderValue(id: SensorId): number {
-  return SENSORS[id].axis[0];
+/** P&ID sensör kimliği -> MKUItkiDiagnostikPaket alan adı eşlemesi. */
+const SENSOR_ALANLARI: Record<SensorId, keyof MKUItkiDiagnostikPaketUiModel> = {
+  "PT-01": "PT1",
+  "PT-02": "PT2",
+  "PT-03": "PT3",
+  "PT-04": "PT4",
+  "PT-05": "PT5",
+  "TC-01": "TC1",
+  "TC-02": "TC2",
+};
+
+/** Paket henüz gelmediyse rozetler eksen alt değerini gösterir. */
+function sensorDeger(
+  id: SensorId,
+  ozet: MKUItkiDiagnostikPaketUiModel | undefined,
+): number {
+  return ozet ? ozet[SENSOR_ALANLARI[id]] : SENSORS[id].axis[0];
 }
 
-function flatLinePoints(id: SensorId, axisMax: number): string {
-  const y = 97 - Math.max(0, Math.min(1, sensorPlaceholderValue(id) / axisMax)) * 92;
-  return `0,${y.toFixed(1)} 300,${y.toFixed(1)}`;
+function buildLinePoints(degerler: number[], axisMax: number): string {
+  const n = degerler.length;
+  if (n < 2) return "";
+  const points: string[] = [];
+  for (let i = 0; i < n; i++) {
+    const x = (i / (n - 1)) * 300;
+    const y = 97 - Math.max(0, Math.min(1, degerler[i] / axisMax)) * 92;
+    points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+  }
+  return points.join(" ");
 }
 
 function buildSteps(opMod: OpMod, aborted: boolean, statusColor: string): SequenceStepView[] {
@@ -167,7 +188,7 @@ export function buildMissionControlView(
   const igniter2State = mapAtesleyiciDurum(ozet?.valfDurum_Igniter2);
 
   const badges: SensorBadgeView[] = BADGE_DEFS.map((d) => {
-    const v = sensorPlaceholderValue(d.id);
+    const v = sensorDeger(d.id, ozet);
     const cfg = SENSORS[d.id];
     const color = d.id.startsWith("TC") ? tcColor(v, cfg.axis) : ptColor(v, cfg.axis);
     return {
@@ -179,15 +200,23 @@ export function buildMissionControlView(
       foX: d.cx - 42,
       foY: d.cy - 31,
       color,
-      reading: `${fmt(d.id, v)} ${cfg.unit}`,
+      deger: fmt(d.id, v),
+      birim: cfg.unit,
     };
   });
 
-  const graphLines: GraphLineView[] = GRAPH_SERIES.map((s) => ({
-    color: s.color,
-    label: s.label,
-    points: flatLinePoints(s.id, s.axisMax),
-  }));
+  const sensorGecmisi = getGrafikGecmisi(MessageTypes.MKUItkiDiagnostikPaket);
+  const graphLines: GraphLineView[] = GRAPH_SERIES.map((s) => {
+    const alan = SENSOR_ALANLARI[s.id];
+    const degerler = sensorGecmisi
+      .map((ornek) => ornek.degerler[alan])
+      .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+    return {
+      color: s.color,
+      label: s.label,
+      points: buildLinePoints(degerler, s.axisMax),
+    };
+  });
 
   const steps = buildSteps(opMod, aborted, statusColor);
 

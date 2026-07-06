@@ -55,6 +55,16 @@ export const GRAFIK_KAYNAKLARI: GrafikKaynakTanim[] = [
       { key: "rksDurum", label: "RKS Durumu" },
       { key: "valfKomutMod", label: "Valf Komut Modu" },
       { key: "seciliAtesleyici", label: "Seçili Ateşleyici" },
+      { key: "imu_pitch", label: "İMU Pitch (°)" },
+      { key: "imu_roll", label: "İMU Roll (°)" },
+      { key: "imu_yaw", label: "İMU Yaw (°)" },
+      { key: "PT1", label: "PT1 Basınç (bar)" },
+      { key: "PT2", label: "PT2 Basınç (bar)" },
+      { key: "PT3", label: "PT3 Basınç (bar)" },
+      { key: "PT4", label: "PT4 Basınç (bar)" },
+      { key: "PT5", label: "PT5 Basınç (bar)" },
+      { key: "TC1", label: "TC1 Sıcaklık (°C)" },
+      { key: "TC2", label: "TC2 Sıcaklık (°C)" },
     ],
     getSnapshot: () => {
       const ozet = useMKUItkiDiagnostikPaketStore.getState().ozet;

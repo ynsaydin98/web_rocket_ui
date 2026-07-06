@@ -190,6 +190,37 @@ h2 { margin: 0; font-size: 18px; letter-spacing: .03em; }
 .grafik-olusturucu__vazgec:hover { color: var(--text-main); }
 @media (max-width: 900px) { .grafik-grid { grid-template-columns: 1fr; } }
 
+/* Göstergeler sayfası: satırda 4'lü büyük puntolu değer kartları */
+.gosterge-grup { display: grid; gap: 10px; }
+.gosterge-grup__baslik { margin: 4px 0 0; color: var(--accent-blue); font: 700 13px ui-monospace, monospace; letter-spacing: .16em; text-transform: uppercase; }
+.gosterge-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.gosterge-kart { display: flex; flex-direction: column; gap: 10px; min-height: 168px; padding: 14px 18px 12px; border: 1px solid var(--border-panel); border-radius: 8px; background: #0a1017; transition: border-color .15s ease, box-shadow .15s ease; }
+.gosterge-kart__ust { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.gosterge-kart__baslik { overflow: hidden; color: var(--text-muted); font: 700 13px ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; text-overflow: ellipsis; }
+.gosterge-kart__limit-btn { flex: 0 0 auto; padding: 4px 9px; border: 1px solid var(--border-panel); border-radius: 4px; background: transparent; color: var(--text-muted); font: 700 10px ui-monospace, monospace; letter-spacing: .1em; cursor: pointer; }
+.gosterge-kart__limit-btn:hover { color: var(--accent-blue); border-color: var(--accent-blue); }
+.gosterge-kart__deger-satir { display: flex; flex: 1; align-items: baseline; justify-content: center; gap: 10px; min-width: 0; }
+.gosterge-kart__deger { font: 800 58px ui-monospace, monospace; line-height: 1; letter-spacing: .02em; color: var(--text-main); font-variant-numeric: tabular-nums; }
+.gosterge-kart__birim { color: var(--text-muted); font: 700 18px ui-monospace, monospace; }
+.gosterge-kart__alt { display: flex; justify-content: center; }
+.gosterge-kart__limit-etiket { color: var(--text-muted); font: 600 11px ui-monospace, monospace; letter-spacing: .06em; }
+.gosterge-kart__limit-etiket--bos { opacity: .55; }
+.gosterge-kart--iyi { border-color: rgba(57,224,138,.65); box-shadow: inset 0 0 26px -14px rgba(57,224,138,.7); }
+.gosterge-kart--iyi .gosterge-kart__deger { color: var(--accent-green); text-shadow: 0 0 14px rgba(57,224,138,.35); }
+.gosterge-kart--ihlal { border-color: rgba(255,77,77,.75); box-shadow: inset 0 0 26px -12px rgba(255,77,77,.8); }
+.gosterge-kart--ihlal .gosterge-kart__deger { color: var(--accent-red); text-shadow: 0 0 14px rgba(255,77,77,.4); }
+.gosterge-kart__form { display: grid; flex: 1; gap: 8px; align-content: center; }
+.gosterge-kart__form label { display: grid; grid-template-columns: 44px 1fr; align-items: center; gap: 8px; }
+.gosterge-kart__form label span { color: var(--accent-blue); font: 700 10px ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; }
+.gosterge-kart__form input { width: 100%; padding: 7px 10px; border: 1px solid var(--border-panel); border-radius: 5px; background: #050b12; color: var(--text-main); font: 700 14px ui-monospace, monospace; }
+.gosterge-kart__form input:focus { outline: 1px solid var(--accent-blue); }
+.gosterge-kart__form-aksiyon { display: flex; gap: 6px; }
+.gosterge-kart__kaydet { flex: 1; padding: 8px; border: 1px solid #2f8f5c; border-radius: 5px; background: rgba(57,224,138,.12); color: #5fe9a3; font: 800 11px ui-monospace, monospace; letter-spacing: .1em; cursor: pointer; }
+.gosterge-kart__temizle { padding: 8px 12px; border: 1px solid var(--border-panel); border-radius: 5px; background: transparent; color: var(--text-muted); font: 700 11px ui-monospace, monospace; letter-spacing: .08em; cursor: pointer; }
+.gosterge-kart__temizle:hover { color: var(--accent-red); border-color: var(--accent-red); }
+@media (max-width: 1180px) { .gosterge-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .gosterge-kart__deger { font-size: 48px; } }
+@media (max-width: 620px) { .gosterge-grid { grid-template-columns: 1fr; } }
+
 /* Live rocket location map */
 .position-map--live::before { display: none; }
 .position-map__canvas { position: absolute; inset: 0; }

@@ -9,7 +9,7 @@ export function FlightTerminationPage() {
       <header className="page-heading">
         <div>
           <p className="eyebrow">Uçuş Güvenliği</p>
-          <h1>Flight Termination</h1>
+          <h2>Uçuş Sonlandırma</h2>
         </div>
       </header>
 

@@ -233,6 +233,10 @@ src/
  │   │   ├── store/grafikVeriStore.ts     # örnek versiyon sayacı
  │   │   ├── store/grafikTanimStore.ts    # kullanıcı grafik tanımları (localStorage)
  │   │   └── components/                  # GrafikPanel, GrafikOlusturucu
+ │   ├── gostergeler/             # Göstergeler sayfası (büyük değer kartları)
+ │   │   ├── config/gostergeTanimlari.ts  # kart tanımları + kaynak bağları
+ │   │   ├── store/gostergeLimitStore.ts  # kullanıcı limitleri (localStorage)
+ │   │   └── components/GostergeKarti.tsx
  │   ├── dashboard/               # ana sayfa panelleri (3D sahne, harita, IMU...)
  │   ├── missionControl/          # Komut & Sekans ekranının feature parçaları
  │   │   ├── config/missionControlConfig.ts    # sensör/faz sabitleri
@@ -304,9 +308,29 @@ Ortak görsel bileşenler ve sayfa componentleri. Sayfalar yalnızca feature/sha
 /grafik        Grafikler (2 sütunlu canlı grafik grid'i + grafik oluşturucu)
 /tables        Model tabloları (MKU sistem bilgisi, yoklama/versiyon/sıfırla)
 /commands      Komut & Sekans (itki test standı ekranı)
+/gostergeler   Göstergeler (büyük puntolu değer kartları + limit renklendirme)
 /flight-termination  Uçuş Sonlandırma (FTS karar ekranı: PT/TC + zenit-azimut)
 /debug         Hata ayıklama konsolu (ham WebSocket mesajları)
 ```
+
+## Göstergeler Sayfası
+
+`/gostergeler` sayfası PT/TC, İMU ve GNSS parametrelerini satırda 4 kart
+olacak şekilde büyük puntolu dikdörtgen kutucuklarda gösterir (başlık +
+değer + birim).
+
+- **Limitler**: Her kartın LİMİT butonu min/maks giriş formunu açar;
+  girilen limitler `localStorage`'da saklanır (`gostergeLimitStore`).
+- **Renklendirme**: Limit tanımlı değilse kart nötr görünümdedir. Limit
+  tanımlıysa değer aralık içindeyken kart yeşil, aralık dışına çıktığında
+  kırmızı vurgulanır. Değeri olmayan (paketi henüz tanımsız) kartlar "--"
+  gösterir ve limitten bağımsız nötr kalır.
+- **Veri bağlama**: Kartlar grafik sayfasıyla ortak paket kaynak kayıtları
+  (`features/grafik/config/grafikKaynaklari.ts`) üzerinden beslenir.
+  PT1..PT5, TC1..TC2 ve İMU roll/pitch/yaw kartları
+  `MKUItkiDiagnostikPaket`'ten canlı okunur; ivme ve GNSS alanları ilgili
+  paket protokole eklendiğinde `gostergeTanimlari.ts` içindeki karta
+  `kaynakId` + `alanKey` yazılarak bağlanır.
 
 ## Grafikler Sayfası
 
@@ -378,7 +402,7 @@ Ekran tamamen **gerçek `MKUItkiDiagnostikPaket` telemetrisi** ile beslenir; yer
 - **Vanalar**: İtki vanası `valfDurum_OksitleyiciValf` alanından okunur (0=KAPALI, diğer=AÇIK placeholder eşlemesi).
 - **Ateşleyiciler**: `valfDurum_Igniter1/2` alanlarından okunur (0=GÜVENLİ, 1=KOLLANDI, 2+=ATEŞLENDİ placeholder eşlemesi).
 - **Acil durdur durumu**: paketteki `acilDurdurDurum` alanı veya yerel kilit-onaylı buton.
-- **Sensör rozetleri (PT/TC)**: Bu paket sensör verisi içermediği için ayrı sensör telemetri paketi tanımlanana kadar eksen alt değerini gösterir (`missionControlViewMapper.ts` içindeki placeholder yardımcıları).
+- **Sensör rozetleri (PT/TC)**: Paketin `PT1..PT5` / `TC1..TC2` alanlarından canlı okunur; CANLI TELEMETRİ grafiği de Grafikler sayfasıyla ortak zaman serisi tamponundan (`grafikVeriGecmisi.ts`) beslenir.
 
 Paneller:
 

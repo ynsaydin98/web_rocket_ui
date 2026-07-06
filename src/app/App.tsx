@@ -64,6 +64,12 @@ const FlightTerminationPage = lazy(() =>
   })),
 );
 
+const GostergelerPage = lazy(() =>
+  import("../pages/GostergelerPage").then((module) => ({
+    default: module.GostergelerPage,
+  })),
+);
+
 const DebugPage = lazy(() =>
   import("../pages/DebugPage").then((module) => ({
     default: module.DebugPage,
@@ -144,6 +150,10 @@ function App() {
             />
           </Route>
           <Route path="commands" element={withPageSuspense(<CommandsPage />)} />
+          <Route
+            path="gostergeler"
+            element={withPageSuspense(<GostergelerPage />)}
+          />
           <Route
             path="flight-termination"
             element={withPageSuspense(<FlightTerminationPage />)}

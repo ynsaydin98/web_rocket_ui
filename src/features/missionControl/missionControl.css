@@ -154,9 +154,16 @@
   line-height: 1;
 }
 .mc-badge-fo__value {
-  font: 800 17px "JetBrains Mono";
+  font: 800 18px "JetBrains Mono";
   line-height: 1;
   color: #eaf1f7;
+  white-space: nowrap;
+}
+.mc-badge-fo__birim {
+  font: 700 10px "JetBrains Mono";
+  line-height: 1;
+  letter-spacing: .04em;
+  color: #8fa4b6;
 }
 
 /* ---- telemetry graph panel ---- */

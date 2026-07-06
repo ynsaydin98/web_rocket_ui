@@ -114,7 +114,8 @@ export function MissionControlSchematic({ view }: Props) {
             <foreignObject x={bd.foX} y={bd.foY} width={84} height={62}>
               <div className="mc-badge-fo">
                 <span className="mc-badge-fo__id" style={{ color: bd.color }}>{bd.id}</span>
-                <span className="mc-badge-fo__value">{bd.reading}</span>
+                <span className="mc-badge-fo__value">{bd.deger}</span>
+                <span className="mc-badge-fo__birim">{bd.birim}</span>
               </div>
             </foreignObject>
           </g>
