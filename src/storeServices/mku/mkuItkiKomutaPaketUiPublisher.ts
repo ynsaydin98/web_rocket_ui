@@ -36,7 +36,7 @@ export function startMKUItkiKomutaPaketUiPublisher(intervalMs = 100) {
 }
 
 export function stopMKUItkiKomutaPaketUiPublisher() {
-  if (timerId !== undefined) {
+  if (timerId === undefined) {
     return;
   }
 

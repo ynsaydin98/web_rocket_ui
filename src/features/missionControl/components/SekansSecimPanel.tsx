@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { sendCommand } from "../../commands/services/commandSender";
 import {
   createSekansAlKomut,
@@ -13,9 +13,11 @@ import {
   type SekansKomutSecimi,
   type SekansValfSecimi,
 } from "../../../paketler/mku/mkuSekansGonderPaket";
+import { useMKUItkiKomutaPaketStore } from "../../../store/mku/mkuItkiKomutaPaketStore";
+import type { MKUItkiKomutaPaketUiModel } from "../../../ui-models/mku/mkuItkiKomutaPaketUiModel";
 
 /** Sekans tablosundaki satır sayısı. */
-const ADIM_SAYISI = 16;
+const ADIM_SAYISI = 10;
 
 const VALF_SECENEKLERI: { deger: SekansValfSecimi; etiket: string }[] = [
   { deger: SekansValfSecimleri.SecimYok, etiket: "SECIM_YOK" },
@@ -40,10 +42,30 @@ function bosAdimlar(): MKUSekansAdim[] {
   }));
 }
 
+function adimlarFromItkiKomutaPaket(
+  model: MKUItkiKomutaPaketUiModel,
+): MKUSekansAdim[] {
+  return Array.from({ length: ADIM_SAYISI }, (_, i) => ({
+    islemNo: i + 1,
+    valfSecimi: model[`seciliValf_${i}` as keyof MKUItkiKomutaPaketUiModel] as SekansValfSecimi,
+    komutSecimi: model[`seciliIslem_${i}` as keyof MKUItkiKomutaPaketUiModel] as SekansKomutSecimi,
+    sure_ms: model[`islemSuresi_${i}` as keyof MKUItkiKomutaPaketUiModel] as number,
+  }));
+}
+
 /** İşlem no / valf / komut / süre kolonlu sekans tablosu ve gönder-al-EEPROM aksiyonları. */
 export function SekansSecimPanel() {
+  const itkiKomutaOzet = useMKUItkiKomutaPaketStore((s) => s.ozet);
+  const itkiKomutaLastUpdateId = useMKUItkiKomutaPaketStore(
+    (s) => s.lastUpdateId,
+  );
   const [adimlar, setAdimlar] = useState<MKUSekansAdim[]>(bosAdimlar);
   const [gecenSure, setGecenSure] = useState<number>(0);
+
+  useEffect(() => {
+    if (!itkiKomutaOzet) return;
+    setAdimlar(adimlarFromItkiKomutaPaket(itkiKomutaOzet));
+  }, [itkiKomutaLastUpdateId, itkiKomutaOzet]);
 
   const adimGuncelle = (index: number, degisiklik: Partial<MKUSekansAdim>) => {
     setAdimlar((onceki) =>

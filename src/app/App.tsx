@@ -27,6 +27,10 @@ import {
   startMKUItkiDiagnostikPaketUiPublisher,
   stopMKUItkiDiagnostikPaketUiPublisher,
 } from "../storeServices/mku/mkuItkiDiagnostikPaketUiPublisher";
+import {
+  startMKUItkiKomutaPaketUiPublisher,
+  stopMKUItkiKomutaPaketUiPublisher,
+} from "../storeServices/mku/mkuItkiKomutaPaketUiPublisher";
 
 const DashboardPage = lazy(() =>
   import("../pages/DashboardPage").then((module) => ({
@@ -103,6 +107,7 @@ function App() {
     startMKUItkiDiagnostikPaketUiPublisher(
       appConfig.telemetryUiPublishIntervalMs,
     );
+    startMKUItkiKomutaPaketUiPublisher(appConfig.debugUiPublishIntervalMs);
     //#endregion
 
     startGrafikVeriGecmisi();
@@ -121,6 +126,7 @@ function App() {
       stopMKUYoklamaPaketUiPublisher();
       stopMKUVersiyonPaketUiPublisher();
       stopMKUItkiDiagnostikPaketUiPublisher();
+      stopMKUItkiKomutaPaketUiPublisher();
       //#endregion
 
       stopGrafikVeriGecmisi();
