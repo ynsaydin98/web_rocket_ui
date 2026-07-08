@@ -367,10 +367,16 @@ sayımı, itki süreleri, operasyon geçen süre, valf durumları).
   kaynak paket ve o paketin sayısal değişkenlerini seçtiren bir forma
   genişler. Seçilen alanlar (en fazla 6 seri) yeni bir canlı grafik olarak
   grid'e eklenir; tanımlar `localStorage`'da saklanır.
-- **Yeni paket ekleme**: `features/grafik/config/grafikKaynaklari.ts`
-  içindeki kayıt listesine, paketin store'una bağlanan yeni bir kaynak
-  eklemek yeterlidir — oluşturucu arayüzü ve veri tamponu bu listeyi
-  otomatik kullanır.
+- **Paket ve alan keşfi**: Grafik oluşturucu, `src/ui-models/**/*.ts`
+  içindeki UI model type'larından üretilen
+  `features/grafik/config/generatedGrafikAlanlari.ts` metadata'sını kullanır.
+  Sadece `number` tipli alanlar grafik değişkeni olarak listelenir; `string`
+  gibi alanlar otomatik dışarıda kalır. `npm run dev` ve `npm run build`
+  öncesinde `npm run generate:grafik` otomatik çalışır.
+- **Yeni paket ekleme**: Yeni UI model dosyası eklendiğinde alan listesi
+  otomatik üretilir. Canlı veri çizimi için yalnızca
+  `features/grafik/config/grafikKaynaklari.ts` içindeki küçük store
+  registry'sine paketin Zustand store bağlantısı eklenir.
 - **Veri tamponu**: `grafikVeriGecmisi.ts` her kaynak için son 300 örneği
   tutar (100 ms yayında ~30 sn pencere) ve her örnekte grafik panellerini
   yeniden çizdirir. Paneller veri versiyon sayacına kendileri subscribe

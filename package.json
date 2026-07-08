@@ -4,7 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "generate:grafik": "node scripts/grafikAlanlariUret.mjs",
+    "predev": "npm run generate:grafik",
     "dev": "vite",
+    "prebuild": "npm run generate:grafik",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
