@@ -65,6 +65,7 @@ export function SekansSecimPanel() {
   useEffect(() => {
     if (!itkiKomutaOzet) return;
     setAdimlar(adimlarFromItkiKomutaPaket(itkiKomutaOzet));
+    setGecenSure(itkiKomutaOzet.geriSayim_sn);
   }, [itkiKomutaLastUpdateId, itkiKomutaOzet]);
 
   const adimGuncelle = (index: number, degisiklik: Partial<MKUSekansAdim>) => {
