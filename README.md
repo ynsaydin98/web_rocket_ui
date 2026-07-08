@@ -441,7 +441,7 @@ Ekran tamamen **gerçek `MKUItkiDiagnostikPaket` telemetrisi** ile beslenir; yer
 Paneller:
 
 - **Manuel komut paneli** (sol sütun, `ManuelKomutPanel.tsx`): İTKİ VANASI, ATEŞLEYİCİ-1 ve ATEŞLEYİCİ-2 için canlı durum (paketteki `valfDurum_*` alanlarından) ve AÇ / KAPAT butonları. Butonlar `MKUKomutPaket / VanaKomut` komutunu gönderir.
-- **Sekans seçimi paneli** (sol sütun, `SekansSecimPanel.tsx`): İşlem No / Valf Seçimi / Komut Seçimi / Süre (T + MS) kolonlu 16 satırlık sekans tablosu ve dört aksiyon: SEKANS GONDER (`MKUSekansGonderPaket`), SEKANS AL (`MKUSekansAlPaket`), SEKANS EEPROM YAZ (`MKUSekansEepromYazPaket`), SEKANS EEPROM OKU (`MKUSekansEepromOkuPaket`).
+- **Sekans seçimi paneli** (sol sütun, `SekansSecimPanel.tsx`): İşlem No / Valf Seçimi / Komut Seçimi / Süre (T + MS) kolonlu 16 satırlık sekans tablosu, tablo altında Geçen Süre sayısal giriş alanı ve dört aksiyon: SEKANS GONDER (`MKUSekansGonderPaket`), SEKANS AL (`MKUSekansAlPaket`), SEKANS EEPROM YAZ (`MKUSekansEepromYazPaket`), SEKANS EEPROM OKU (`MKUSekansEepromOkuPaket`).
 - **P&ID mimik şeması**: oksitleyici tankı (N₂O) → manuel vana → itki vanası → manifold → yanma odası → nozzle; canlı vana/ateşleyici durumları ve sensör rozetleri.
 - **Canlı telemetri grafiği**: basınç/sıcaklık serileri.
 - **Sekans kontrol paneli**: SEKANS BAŞLAT, kilit + ACİL DURDUR, manuel vana anahtarı ve 4 adımlı faz listesi.

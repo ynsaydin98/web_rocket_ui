@@ -43,6 +43,7 @@ function bosAdimlar(): MKUSekansAdim[] {
 /** İşlem no / valf / komut / süre kolonlu sekans tablosu ve gönder-al-EEPROM aksiyonları. */
 export function SekansSecimPanel() {
   const [adimlar, setAdimlar] = useState<MKUSekansAdim[]>(bosAdimlar);
+  const [gecenSure, setGecenSure] = useState<number>(0);
 
   const adimGuncelle = (index: number, degisiklik: Partial<MKUSekansAdim>) => {
     setAdimlar((onceki) =>
@@ -61,6 +62,12 @@ export function SekansSecimPanel() {
 
       <div className="mc-sekans-secim__tablo-sarici">
         <table className="mc-sekans-secim__tablo">
+          <colgroup>
+            <col className="mc-sekans-secim__col-no" />
+            <col className="mc-sekans-secim__col-valf" />
+            <col className="mc-sekans-secim__col-komut" />
+            <col className="mc-sekans-secim__col-sure" />
+          </colgroup>
           <thead>
             <tr>
               <th>İşlem No</th>
@@ -123,6 +130,20 @@ export function SekansSecimPanel() {
           </tbody>
         </table>
       </div>
+
+      <label className="mc-sekans-secim__metin-alani">
+        <span>GEÇEN SÜRE</span>
+        <input
+          type="number"
+          min={0}
+          value={gecenSure}
+          onChange={(e) => {
+            const sayi = e.target.valueAsNumber;
+            setGecenSure(Number.isFinite(sayi) && sayi >= 0 ? sayi : 0);
+          }}
+          placeholder="0"
+        />
+      </label>
 
       <div className="mc-sekans-secim__aksiyonlar">
         <button
