@@ -14,7 +14,7 @@ type Props = {
 /** Başlat/acil durdur kontrolleri, manuel vana switch'i ve 4 adımlı (opMod) sekans listesi. */
 export function MissionControlSequencePanel({ view }: Props) {
   const abort = useMissionControlStore((s) => s.abort);
-  const reset = useMissionControlStore((s) => s.reset);
+  const lockAbort = useMissionControlStore((s) => s.lockAbort);
   const unlockAbort = useMissionControlStore((s) => s.unlockAbort);
   const setManualValve = useMissionControlStore((s) => s.setManualValve);
   const abortUnlockUntil = useMissionControlStore((s) => s.abortUnlockUntil);
@@ -43,6 +43,15 @@ export function MissionControlSequencePanel({ view }: Props) {
     abort();
   };
 
+  const handleAbortLockToggle = () => {
+    setNow(Date.now());
+    if (abortUnlocked) {
+      lockAbort();
+      return;
+    }
+    unlockAbort();
+  };
+
   const handleManualValveToggle = () => {
     const next = !view.valveManual.isOpen;
     setManualValve(next);
@@ -66,13 +75,9 @@ export function MissionControlSequencePanel({ view }: Props) {
 
         <div className="mc-lock-row">
           <button
-            onClick={() => {
-              setNow(Date.now());
-              unlockAbort();
-            }}
-            title="Güvenlik kilidi"
-            disabled={abortUnlocked}
-            className={`mc-lock-btn${abortUnlocked ? " mc-lock-btn--unlocked mc-lock-btn--disabled" : ""}`}
+            onClick={handleAbortLockToggle}
+            title={abortUnlocked ? "Güvenlik kilidini kapat" : "Güvenlik kilidini aç"}
+            className={`mc-lock-btn${abortUnlocked ? " mc-lock-btn--unlocked" : ""}`}
           >
             <span>{abortUnlocked ? "\u{1F513}" : "\u{1F512}"}</span>
           </button>
@@ -102,12 +107,6 @@ export function MissionControlSequencePanel({ view }: Props) {
         </button>
         <span className="mc-manual-row__tag" style={{ color: view.valveManual.color }}>{view.valveManual.text}</span>
       </div>
-
-      {view.showReset && (
-        <div className="mc-reset">
-          <button onClick={reset} className="mc-reset-btn">SIFIRLA · GÜVENLİ DURUMA DÖN</button>
-        </div>
-      )}
 
       <div className="mc-steps">
         {view.steps.map((step) => (

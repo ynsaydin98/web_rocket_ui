@@ -1,7 +1,7 @@
 // Mission Control sayfasının YEREL UI/güvenlik durumu. Telemetri artık MKU
 // itki diagnostik boru hattından geliyor (paketler/mku/mkuItkiDiagnostikPaket
 // -> mapper -> storeServices publisher -> store/mku/mkuItkiDiagnostikPaketStore);
-// bu store yalnızca acil-durdur kilidi, aborted bayrağı ve manuel vana
+// bu store yalnızca acil-durdur kilidi, yerel manuel emniyet durumu ve manuel vana
 // anahtarının yerel durumunu tutar. Komutların donanıma nasıl gönderildiği
 // için src/commands/{sekansBaslatKomut,acilDurdurKomut,manuelValfKomut}
 // klasörlerine bakın.
@@ -13,13 +13,12 @@ export type ValveState = "open" | "closed";
 export type IgniterState = "safe" | "armed" | "fired";
 
 export type MissionControlState = {
-  aborted: boolean;
   abortUnlockUntil: number;
   manualValve: ValveState;
 
   abort: () => void;
-  reset: () => void;
   setManualValve: (open: boolean) => void;
+  lockAbort: () => void;
   unlockAbort: () => void;
 };
 
@@ -37,21 +36,14 @@ function clearAbortRelockTimer() {
 }
 
 export const useMissionControlStore = create<MissionControlState>((set, get) => ({
-  aborted: false,
   abortUnlockUntil: 0,
   manualValve: "closed",
 
   abort: () => {
     const s = get();
-    if (s.aborted) return;
     if (!(s.abortUnlockUntil > Date.now())) return;
     clearAbortRelockTimer();
-    set({ aborted: true, manualValve: "closed", abortUnlockUntil: 0 });
-  },
-
-  reset: () => {
-    clearAbortRelockTimer();
-    set({ aborted: false, abortUnlockUntil: 0 });
+    set({ manualValve: "closed", abortUnlockUntil: 0 });
   },
 
   setManualValve: (open) => {
@@ -60,9 +52,13 @@ export const useMissionControlStore = create<MissionControlState>((set, get) => 
     set({ manualValve: next });
   },
 
+  lockAbort: () => {
+    clearAbortRelockTimer();
+    set({ abortUnlockUntil: 0 });
+  },
+
   unlockAbort: () => {
     const s = get();
-    if (s.aborted) return;
     if (s.abortUnlockUntil > Date.now()) return;
     clearAbortRelockTimer();
     set({ abortUnlockUntil: Date.now() + ABORT_UNLOCK_MS });

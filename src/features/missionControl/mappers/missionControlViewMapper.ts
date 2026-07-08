@@ -112,7 +112,6 @@ export type MissionControlView = {
   exhaustActive: boolean;
   graphLines: GraphLineView[];
   steps: SequenceStepView[];
-  showReset: boolean;
 };
 
 const GRAPH_SERIES: { id: SensorId; color: string; label: string; axisMax: number }[] = [
@@ -177,8 +176,8 @@ export function buildMissionControlView(
 ): MissionControlView {
   const opMod = ozet ? mapItkiOpDurumlariToOpMod(ozet.itkiOpDurumlari) : "BEKLEMEDE";
 
-  // Acil durdur: yerel kilit-onaylı buton VEYA paketteki acilDurdurDurum alanı.
-  const aborted = local.aborted || (ozet !== undefined && ozet.acilDurdurDurum !== 0);
+  // Acil durdur durumu gerçek telemetrideki acilDurdurDurum alanından gelir.
+  const aborted = ozet !== undefined && ozet.acilDurdurDurum !== 0;
   const status: MissionStatus = aborted ? "ABORT" : mapOpModToStatus(opMod);
   const statusColor = STATUS_COLORS[status];
 
@@ -237,6 +236,5 @@ export function buildMissionControlView(
     exhaustActive,
     graphLines,
     steps,
-    showReset: local.aborted,
   };
 }

@@ -435,7 +435,7 @@ Ekran tamamen **gerçek `MKUItkiDiagnostikPaket` telemetrisi** ile beslenir; yer
 - **Görev fazı**: `itkiOpDurumlari` alanı 4 fazlı sekans listesini sürer. Sayısal kod eşlemesi (0/1/2/3) protokol belgesi netleşene kadar placeholder'dır ve tek noktadan (`mappers/itkiOpModMapper.ts`) güncellenir.
 - **Vanalar**: İtki vanası `valfDurum_OksitleyiciValf` alanından okunur (0=KAPALI, diğer=AÇIK placeholder eşlemesi).
 - **Ateşleyiciler**: `valfDurum_Igniter1/2` alanlarından okunur (0=GÜVENLİ, 1=KOLLANDI, 2+=ATEŞLENDİ placeholder eşlemesi).
-- **Acil durdur durumu**: paketteki `acilDurdurDurum` alanı veya yerel kilit-onaylı buton.
+- **Acil durdur durumu**: paketteki `acilDurdurDurum` alanından okunur.
 - **Sensör rozetleri (PT/TC)**: Paketin `PT1..PT5` / `TC1..TC2` alanlarından canlı okunur; CANLI TELEMETRİ grafiği de Grafikler sayfasıyla ortak zaman serisi tamponundan (`grafikVeriGecmisi.ts`) beslenir.
 
 Paneller:
@@ -444,12 +444,12 @@ Paneller:
 - **Sekans seçimi paneli** (sol sütun, `SekansSecimPanel.tsx`): İşlem No / Valf Seçimi / Komut Seçimi / Süre (T + MS) kolonlu 16 satırlık sekans tablosu ve dört aksiyon: SEKANS GONDER (`MKUSekansGonderPaket`), SEKANS AL (`MKUSekansAlPaket`), SEKANS EEPROM YAZ (`MKUSekansEepromYazPaket`), SEKANS EEPROM OKU (`MKUSekansEepromOkuPaket`).
 - **P&ID mimik şeması**: oksitleyici tankı (N₂O) → manuel vana → itki vanası → manifold → yanma odası → nozzle; canlı vana/ateşleyici durumları ve sensör rozetleri.
 - **Canlı telemetri grafiği**: basınç/sıcaklık serileri.
-- **Sekans kontrol paneli**: SEKANS BAŞLAT, kilit + ACİL DURDUR, manuel vana anahtarı, 4 adımlı faz listesi ve RESET.
+- **Sekans kontrol paneli**: SEKANS BAŞLAT, kilit + ACİL DURDUR, manuel vana anahtarı ve 4 adımlı faz listesi.
 
 Komut davranışları:
 
 - `SEKANS BAŞLAT` → `SekansBaslat` komutu gönderilir.
-- Kilit butonu ACİL DURDUR'u 10 saniyeliğine aktif eder (buton sabit kırmızı olur ve üzerinde canlı geri sayım işler); 10 saniye içinde basılmazsa kilit otomatik geri kapanır. Basılırsa `AcilDurdur` komutu gönderilir.
+- Kilit butonu ACİL DURDUR'u 10 saniyeliğine aktif eder (buton sabit kırmızı olur ve üzerinde canlı geri sayım işler); kilit açıkken aynı butona tekrar basılırsa süre dolmadan kapanır. 10 saniye içinde basılmazsa kilit otomatik geri kapanır. ACİL DURDUR'a basılırsa `AcilDurdur` komutu gönderilir ve kilit kapanır; tekrar kullanım için yalnızca kilidin yeniden açılması yeterlidir.
 - Manuel vana anahtarı `ManuelValf { acik }` komutunu gönderir ve yerel görsel durumu günceller.
 
 Tablolar sayfasındaki MKU paneli yoklama (`?`), `Versiyon` ve `Reset`
