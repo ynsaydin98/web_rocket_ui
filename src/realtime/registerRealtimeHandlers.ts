@@ -1,4 +1,5 @@
 import { registerMKUItkiDiagnostikPaketHandler } from "./handlers/mku/mkuItkiDiagnostikPaketHandler";
+import { registerMKUItkiKomutaPaketHandler } from "./handlers/mku/mkuItkiKomutaPaketHandler";
 import { registerMKUVersiyonPaketHandler } from "./handlers/mku/mkuVersiyonPaketHandler";
 import { registerMKUYoklamaPaketHandler } from "./handlers/mku/mkuYoklamaPaketHandler";
 
@@ -11,6 +12,7 @@ export function registerRealtimeHandlers() {
   registerMKUItkiDiagnostikPaketHandler();
   registerMKUVersiyonPaketHandler();
   registerMKUYoklamaPaketHandler();
+  registerMKUItkiKomutaPaketHandler();
   //#endregion
 
   registered = true;

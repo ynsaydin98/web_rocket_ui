@@ -9,6 +9,7 @@ export const MessageTypes = {
   MKUSekansAlPaket: "MKUSekansAlPaket",
   MKUSekansEepromYazPaket: "MKUSekansEepromYazPaket",
   MKUSekansEepromOkuPaket: "MKUSekansEepromOkuPaket",
+  MKUItkiKomutaPaket: "MKUItkiKomutaPaket",
   //#endregion
 } as const;
 
