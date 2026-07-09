@@ -11,8 +11,8 @@ import "leaflet/dist/leaflet.css";
 // Zoom araligi, indirilen tile'larin zoom araligiyla eslesmelidir.
 const SOKAK_TILE_URL = "/tiles/{z}/{x}/{y}.png";
 const UYDU_TILE_URL = "/tiles-uydu/{z}/{x}/{y}.jpg";
-const TILE_MIN_ZOOM = 12;
-const TILE_MAX_ZOOM = 17;
+const TILE_MIN_ZOOM = 11;
+const TILE_MAX_ZOOM = 15;
 const VARSAYILAN_ZOOM = 15;
 // Depoda olmayan tile'lar (404) kirik resim ikonu yerine seffaf gorunsun.
 const BOS_TILE =
@@ -60,6 +60,8 @@ function OfflineLeafletMap({ latitude, longitude }: { latitude: number; longitud
     const map = L.map(container, {
       center: [latitude, longitude],
       zoom: VARSAYILAN_ZOOM,
+      minZoom: TILE_MIN_ZOOM,
+      maxZoom: TILE_MAX_ZOOM,
       zoomControl: false,
       attributionControl: false,
     });

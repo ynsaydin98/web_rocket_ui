@@ -9,7 +9,7 @@
 //   uydu:               Esri World Imagery uydu goruntusu -> public/tiles-uydu/{z}/{x}/{y}.jpg
 //
 // Kullanim:
-//   node scripts/tileIndir.mjs --lat 41.095125 --lon 28.637975 --yaricap-km 5 --zmin 12 --zmax 17
+//   node scripts/tileIndir.mjs --lat 41.095125 --lon 28.637975 --yaricap-km 5 --zmin 11 --zmax 15
 //   npm run tiles -- --lat 41.095125 --lon 28.637975
 //   npm run tiles -- --tip uydu --lat 41.095125 --lon 28.637975
 //   npm run tiles -- --sunucu https://tile.openstreetmap.de --bekleme-ms 1000
@@ -50,6 +50,7 @@ const TILE_TIPLERI = {
 const VARSAYILAN_BEKLEME_MS = 600;
 // Blok (403/418/429) sonrasi yeniden deneme beklemeleri (ms).
 const BLOK_BEKLEMELERI_MS = [5000, 15000, 45000];
+const AG_HATASI_BEKLEMELERI_MS = [2000, 5000, 15000];
 // Ust uste bu kadar tile bloklanirsa sunucu bizi engellemistir; temiz dur.
 const MAKS_ARDISIK_BLOK = 5;
 const BLOK_KODLARI = new Set([403, 418, 429]);
@@ -66,8 +67,8 @@ const cikisKlasoru = join(projeKoku, "public", tip.klasor);
 const lat = argumanlar.lat ?? 41.095125;
 const lon = argumanlar.lon ?? 28.637975;
 const yaricapKm = argumanlar["yaricap-km"] ?? 5;
-const zmin = argumanlar.zmin ?? 12;
-const zmax = argumanlar.zmax ?? 17;
+const zmin = argumanlar.zmin ?? 11;
+const zmax = argumanlar.zmax ?? 15;
 const tileSunucu = String(argumanlar.sunucu ?? tip.sunucu).replace(/\/+$/, "");
 const beklemeMs = argumanlar["bekleme-ms"] ?? VARSAYILAN_BEKLEME_MS;
 
@@ -118,13 +119,23 @@ if (isler.length > 20000) {
 // ayni "Access blocked" placeholder PNG'sini dondurur. Merkez tile'i iki
 // farkli zoom'da indirip karsilastiriyoruz; ayni baytlarsa sunucu bizi
 // blokluyor demektir (iki farkli zoom'daki gercek tile'lar ayni olamaz).
-if (await sunucuBloklu()) {
+let sunucuBlokDurumu;
+try {
+  sunucuBlokDurumu = await sunucuBloklu();
+} catch (sebep) {
+  hata(`Tile sunucusuna baglanilamadi: ${hataDetayi(sebep)}`);
+}
+
+if (sunucuBlokDurumu) {
   // Burada process.exit KULLANILMAZ: acik fetch soketleri Windows'ta
   // libuv assert'ine yol acabiliyor; exitCode ile dogal cikis yapilir.
+  const alternatif =
+    tipAdi === "uydu"
+      ? "Uydu saglayicisi bu istemciyi reddediyor. Daha sonra yeniden deneyin veya kullanim izniniz olan Esri REST uyumlu bir uydu tile sunucusunu --sunucu ile verin."
+      : "Alternatif sunucu deneyin: --sunucu https://tile.openstreetmap.de veya --sunucu https://a.tile.opentopomap.org";
   console.error(
     `HATA: ${tileSunucu} her tile icin ayni gorseli donduruyor — sunucu bu istemciyi ` +
-      `blokluyor ("Access blocked" placeholder). Alternatif sunucu deneyin: ` +
-      `--sunucu https://tile.openstreetmap.de veya --sunucu https://a.tile.opentopomap.org`,
+      `blokluyor ("Access blocked" placeholder). ${alternatif}`,
   );
   process.exitCode = 9;
 } else {
@@ -162,7 +173,7 @@ for (const { z, x, y } of isler) {
     if (sonuc === "hata") hatali += 1;
     else indirilen += 1;
 
-    if (indirilen > 0 && indirilen % 50 === 0) {
+    if (indirilen > 0 && indirilen % 10 === 0) {
       console.log(`  ${indirilen} indirildi / ${isler.length}`);
     }
   }
@@ -213,7 +224,16 @@ async function tileIndir(z, x, y, hedef) {
       writeFileSync(hedef, govde);
       return "tamam";
     } catch (sebep) {
-      console.warn(`  HATA ${z}/${x}/${y}: ${sebep.message}`);
+      if (deneme < AG_HATASI_BEKLEMELERI_MS.length) {
+        const bekle = AG_HATASI_BEKLEMELERI_MS[deneme];
+        console.warn(
+          `  AG HATASI ${z}/${x}/${y}: ${hataDetayi(sebep)} — ` +
+            `${bekle / 1000} sn sonra yeniden denenecek`,
+        );
+        await new Promise((coz) => setTimeout(coz, bekle));
+        continue;
+      }
+      console.warn(`  HATA ${z}/${x}/${y}: ${hataDetayi(sebep)}`);
       return "hata";
     }
   }
@@ -223,16 +243,26 @@ async function sunucuBloklu() {
   const z1 = zmin;
   const z2 = zmin < 19 ? zmin + 1 : zmin - 1;
 
-  const [a, b] = await Promise.all(
+  const sonuclar = await Promise.all(
     [z1, z2].map(async (z) => {
       const cevap = await fetch(tip.url(tileSunucu, z, lon2tile(lon, z), lat2tile(lat, z)), {
         headers: { "User-Agent": USER_AGENT },
       });
-      if (!cevap.ok) return null;
-      return Buffer.from(await cevap.arrayBuffer());
+      if (BLOK_KODLARI.has(cevap.status)) {
+        return { bloklu: true, govde: null };
+      }
+      if (!cevap.ok) {
+        throw new Error(`HTTP ${cevap.status} (${tileSunucu})`);
+      }
+      return { bloklu: false, govde: Buffer.from(await cevap.arrayBuffer()) };
     }),
   );
 
+  if (sonuclar.some((sonuc) => sonuc.bloklu)) {
+    return true;
+  }
+
+  const [a, b] = sonuclar.map((sonuc) => sonuc.govde);
   return Boolean(a && b && a.equals(b));
 }
 
@@ -248,15 +278,64 @@ function lat2tile(latDeg, zoom) {
 }
 
 function parseArgs(args) {
+  const temizArgs = args.filter((arg) => arg !== "--");
+
+  // npm 10 bazi Windows/PowerShell kurulumlarinda `npm run ... -- --tip`
+  // bicimindeki secenek adlarini dusurup yalnizca degerleri aktarabiliyor.
+  // Bu durumda belgelenen sirayi konumsal olarak da kabul et:
+  // [tip?] lat lon yaricap-km zmin zmax
+  if (!temizArgs.some((arg) => arg.startsWith("--"))) {
+    const sonuc = {};
+    let index = 0;
+
+    if (TILE_TIPLERI[temizArgs[0]]) {
+      sonuc.tip = temizArgs[0];
+      index = 1;
+    }
+
+    const alanlar = ["lat", "lon", "yaricap-km", "zmin", "zmax"];
+    const degerler = temizArgs.slice(index);
+    if (degerler.length > alanlar.length) {
+      hata("Konumsal arguman sayisi gecersiz.");
+    }
+    degerler.forEach((deger, alanIndex) => {
+      sonuc[alanlar[alanIndex]] = parseArgValue(deger);
+    });
+
+    if (temizArgs.length > 0) {
+      console.warn(
+        "UYARI: npm secenek adlarini aktarmadi; degerler tip/lat/lon/yaricap/zmin/zmax sirasiyla okundu.",
+      );
+    }
+    return sonuc;
+  }
+
   const sonuc = {};
-  for (let i = 0; i < args.length; i += 2) {
-    const anahtar = args[i]?.replace(/^--/, "");
-    const deger = args[i + 1];
+  for (let i = 0; i < temizArgs.length; i += 2) {
+    const arguman = temizArgs[i];
+    const anahtar = arguman?.startsWith("--") ? arguman.slice(2) : undefined;
+    const deger = temizArgs[i + 1];
     if (!anahtar || deger === undefined) continue;
-    // Sayisal degerler sayiya cevrilir; --sunucu gibi metinler oldugu gibi kalir.
-    sonuc[anahtar] = deger.trim() !== "" && Number.isFinite(Number(deger)) ? Number(deger) : deger;
+    sonuc[anahtar] = parseArgValue(deger);
   }
   return sonuc;
+}
+
+function parseArgValue(deger) {
+  return deger.trim() !== "" && Number.isFinite(Number(deger))
+    ? Number(deger)
+    : deger;
+}
+
+function hataDetayi(sebep) {
+  const mesaj = sebep instanceof Error ? sebep.message : String(sebep);
+  const neden = sebep instanceof Error ? sebep.cause : undefined;
+  if (!neden || typeof neden !== "object") return mesaj;
+
+  const kod = "code" in neden ? String(neden.code) : "";
+  const nedenMesaji = "message" in neden ? String(neden.message) : "";
+  const ek = [kod, nedenMesaji].filter(Boolean).join(": ");
+  return ek ? `${mesaj} (${ek})` : mesaj;
 }
 
 function hata(mesaj) {

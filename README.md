@@ -408,15 +408,17 @@ Tile'lar saha operasyonundan önce **bir kez** indirilir:
 
 ```bash
 # Sokak haritası (OSM)
-npm run tiles -- --lat 41.095125 --lon 28.637975 --yaricap-km 5 --zmin 12 --zmax 17
+npm run tiles -- --lat 41.095125 --lon 28.637975 --yaricap-km 5 --zmin 11 --zmax 15
 
 # Uydu görüntüsü (Esri World Imagery)
-npm run tiles -- --tip uydu --lat 41.095125 --lon 28.637975 --yaricap-km 5 --zmin 12 --zmax 17
+npm run tiles -- --tip uydu --lat 41.095125 --lon 28.637975 --yaricap-km 5 --zmin 11 --zmax 15
 ```
 
 - Script (`scripts/tileIndir.mjs`) verilen merkez + yarıçapın bbox'ına giren tile'ları tile sunucusundan sıralı/aralıklı indirir; var olan tile'ları atlar. `--tip sokak` (varsayılan) OSM'den PNG, `--tip uydu` Esri World Imagery'den JPEG indirir.
+- Bazı Windows/npm kurulumları seçenek adlarını script'e aktarmayıp yalnızca değerleri iletebilir; script bu durumda değerleri `tip / lat / lon / yarıçap / zmin / zmax` sırasıyla otomatik olarak yorumlar ve konsola uyarı yazar.
+- Tile sunucusu başlangıç kontrolünde `403/418/429` döndürürse indirme başlamadan durur; geçici DNS/TLS/ağ hatalarında hata kodunu göstererek sınırlı sayıda yeniden dener.
 - `public/tiles/` ve `public/tiles-uydu/` git'e girmez (`.gitignore`); her makinede/yeni saha için script yeniden çalıştırılır.
-- Bileşendeki `TILE_MIN_ZOOM/TILE_MAX_ZOOM` sabitleri (12-17) indirilen zoom aralığıyla eşleşmelidir.
+- Harita ve tile katmanları `11-15` zoom aralığıyla sınırlandırılmıştır; indirme komutundaki `zmin/zmax` değerleri de bu aralıkla eşleşmelidir.
 - OSM tile kullanım politikası gereği yarıçap ve zoom aralığı küçük tutulmalıdır (script 20.000 tile üzerini reddeder).
 - Varsayılan sunucu `tile.openstreetmap.de`'dir (`tile.openstreetmap.org` script'lere "Access blocked" placeholder'ı döndürüyor). Gerekirse `--sunucu <url>` ve `--bekleme-ms <ms>` ile değiştirilebilir; script bloklu sunucuyu başlangıç kalibrasyonuyla algılayıp temiz hata verir.
 - İndirilmemiş bölge/zoom'larda harita koyu arka planla boş görünür; uygulama hata vermez.
