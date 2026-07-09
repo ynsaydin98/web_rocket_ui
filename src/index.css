@@ -22,6 +22,8 @@ h2 { margin: 0; font-size: 18px; letter-spacing: .03em; }
 .top-bar__mission { display: flex; align-items: stretch; gap: 10px; }
 .mission-box { display: flex; align-items: center; justify-content: center; min-width: 170px; padding: 8px 18px; border: 1px solid var(--border-panel); border-radius: 4px; background: rgba(11,22,40,.8); }
 .mission-box > strong { color: var(--accent-blue); font: 700 30px ui-monospace, monospace; letter-spacing: .08em; }
+.mission-box > .mission-box__countdown--negative { color: var(--accent-red); text-shadow: 0 0 12px rgba(255,77,79,.35); }
+.mission-box > .mission-box__countdown--positive { color: var(--accent-green); text-shadow: 0 0 12px rgba(0,208,132,.3); }
 .data-led { display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: var(--accent-red); box-shadow: 0 0 9px rgba(255,77,77,.85); }
 .data-led--live { background: var(--accent-green); box-shadow: 0 0 11px rgba(57,224,138,.9); }
 .status-badge { display: inline-flex; align-items: center; gap: 7px; padding: 6px 9px; border: 1px solid var(--border-panel); color: var(--text-muted); background: rgba(142,163,189,.06); font: 700 9px ui-monospace, monospace; letter-spacing: .09em; white-space: nowrap; }

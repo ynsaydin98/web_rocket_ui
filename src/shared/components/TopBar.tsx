@@ -24,9 +24,16 @@ export function TopBar() {
     return () => window.clearInterval(timerId);
   }, []);
 
-  const geriSayimText = itkiOzet
-    ? `T- ${formatGeriSayim(itkiOzet.itkiBaslatmaGeriSayim_sn)}`
-    : "T- --:--";
+  const geriSayim = itkiOzet?.itkiBaslatmaGeriSayim_sn;
+  const geriSayimPozitif = geriSayim !== undefined && geriSayim >= 0;
+  const geriSayimText =
+    geriSayim !== undefined
+      ? `T${geriSayimPozitif ? "+" : "-"} ${formatGeriSayim(Math.abs(geriSayim))}`
+      : "T- --:--";
+  const geriSayimClassName =
+    geriSayim === undefined
+      ? "mission-box__countdown"
+      : `mission-box__countdown mission-box__countdown--${geriSayimPozitif ? "positive" : "negative"}`;
   const operationMode = itkiOzet
     ? mapItkiOpDurumlariToOpMod(itkiOzet.itkiOpDurumlari)
     : "MOD BEKLENİYOR";
@@ -46,7 +53,7 @@ export function TopBar() {
         </div>
         <div className="top-bar__mission">
           <div className="mission-box" aria-label="Geri sayım">
-            <strong>{geriSayimText}</strong>
+            <strong className={geriSayimClassName}>{geriSayimText}</strong>
           </div>
           <div className="mission-box" aria-label="Operasyon modu">
             <div className="operation-mode" title={operationMode}>

@@ -388,7 +388,7 @@ sayımı, itki süreleri, operasyon geçen süre, valf durumları).
 
 ## Üst Bar (TopBar)
 
-- **Geri sayım kutusu**: `MKUItkiDiagnostikPaket.itkiBaslatmaGeriSayim_sn` değerini `T- mm:ss` formatında gösterir. Veri yokken `T- --:--`.
+- **Geri sayım kutusu**: `MKUItkiDiagnostikPaket.itkiBaslatmaGeriSayim_sn` negatifken kırmızı `T-`, sıfır veya pozitifken yeşil `T+` olarak gösterilir. Veri yokken `T- --:--`.
 - **Operasyon modu kutusu**: `itkiOpDurumlari` değerinin `OpMod` karşılığını gösterir (BEKLEMEDE / GERİ SAYIM / ATEŞLEME / TAMAMLANDI). Veri yokken `MOD BEKLENİYOR`.
 - **Saatler**: Sistem Saati ve GNSS Saati'nin yanında yerel bilgisayar saatini saniyede bir güncelleyen **Lokal Saat** gösterilir. Hız ve irtifa alanları üst bardan kaldırılmıştır.
 - **Veri LED'i**: WebSocket'ten herhangi bir mesaj aktığı sürece yeşil yanar; 2 saniye boyunca hiç mesaj gelmezse kırmızıya döner (`connectionStore.dataLive`).
@@ -463,6 +463,10 @@ Komut davranışları:
 
 Tablolar sayfasındaki MKU paneli yoklama (`?`), `Versiyon` ve `Reset`
 komutlarını tek birleşik tasarımda sunar.
+
+`MKUYoklamaPaket.Yoklama` değeri son paket alındıktan sonra 3 saniye boyunca
+yenilenmezse bağlantı bayat kabul edilir ve UI store değeri otomatik olarak
+`0` yapılır.
 
 ## Ortam Değişkenleri
 
