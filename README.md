@@ -28,6 +28,7 @@ Bu projenin amacı:
 - Zustand
 - React Router
 - Three.js (ana sayfa 3D roket sahnesi)
+- OpenCascade WASM / `occt-import-js` (`.stp` ve `.step` CAD modeli desteği)
 - Leaflet (offline konum haritası)
 
 ## Mimari Kurallar

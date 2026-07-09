@@ -1,8 +1,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { ROCKET_MODEL_URL } from "../config/rocketModelConfig";
+import { loadRocketModel } from "../services/rocketModelLoader";
 
 // Modelin sahnedeki hedef yüksekliği (dünya birimi). Model bu boyuta
 // otomatik ölçeklenir ve sahne merkezine hizalanır.
@@ -146,38 +145,6 @@ export function InteractiveRocketScene({
 // Model dosyasını uzantısına göre uygun three.js yükleyicisiyle yükler.
 // .glb/.gltf (CATIA -> STEP -> glTF dönüşümü çıktıları) kendi materyalleriyle
 // gelir; .obj materyalsiz olduğundan metalik varsayılan materyal uygulanır.
-async function loadRocketModel(url: string): Promise<THREE.Object3D> {
-  const uzanti = url.split("?")[0].split(".").pop()?.toLowerCase();
-
-  if (uzanti === "glb" || uzanti === "gltf") {
-    const gltf = await new GLTFLoader().loadAsync(url);
-    return gltf.scene;
-  }
-
-  const object = await new OBJLoader().loadAsync(url);
-  applyRocketMaterial(object);
-  return object;
-}
-
-// Yüklenen OBJ mesh'lerine mission-control tarzı metalik materyal uygular.
-// OBJ dosyasında normal verisi yoksa aydınlatmanın doğru çalışması için
-// yüzey normalleri hesaplanır.
-function applyRocketMaterial(object: THREE.Object3D) {
-  const material = new THREE.MeshStandardMaterial({
-    color: 0xe8edf3,
-    metalness: 0.72,
-    roughness: 0.28,
-  });
-
-  object.traverse((child) => {
-    if (!(child instanceof THREE.Mesh)) return;
-    if (!child.geometry.getAttribute("normal")) {
-      child.geometry.computeVertexNormals();
-    }
-    child.material = material;
-  });
-}
-
 // Modeli bir pivot grubuna alır; boyutundan bağımsız olarak hedef
 // yüksekliğe ölçekler ve merkezini sahne orijinine hizalar. Pivot,
 // IMU yönelim rotasyonlarının modelin merkezinden uygulanmasını sağlar.

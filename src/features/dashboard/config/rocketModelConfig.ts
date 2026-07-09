@@ -1,10 +1,8 @@
-// 3D roket modelinin kaynak dosyası. Desteklenen formatlar: .obj, .glb, .gltf.
+// 3D roket modelinin kaynak dosyası.
+// Desteklenen formatlar: .obj, .glb, .gltf, .stp ve .step.
 //
-// CATIA çıktıları için önerilen akış: CATIA'dan STEP (.stp) dışa aktarın ve
-// glTF'e dönüştürüp (ör. CAD Assistant, FreeCAD veya `cadexchanger`)
-// src/assets altına .glb olarak koyun. STEP, BREP tabanlı bir CAD formatı
-// olduğu için tarayıcıda doğrudan render edilemez; .glb hem malzeme/renk
-// bilgisini taşır hem de web için optimize yüklenir.
+// STEP dosyaları tarayıcıda OpenCascade WASM ile geometriye dönüştürülür.
+// Büyük CAD modellerinde ilk yükleme .glb'ye göre daha uzun sürebilir.
 //
 // Modeli değiştirmek için dosyayı assets'e ekleyip aşağıdaki import'u
 // güncellemek yeterlidir; sahne yükleyiciyi dosya uzantısından seçer.

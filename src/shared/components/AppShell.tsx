@@ -1,11 +1,15 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { appVersion } from "../../app/appVersion";
 import { PageTabs } from "./PageTabs";
 import { TopBar } from "./TopBar";
 
 export function AppShell() {
+  const location = useLocation();
+  const shellClassName =
+    location.pathname === "/" ? "app-shell app-shell--dashboard" : "app-shell";
+
   return (
-    <div className="app-shell">
+    <div className={shellClassName}>
       <TopBar />
       <PageTabs />
       <main className="app-content">
