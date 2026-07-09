@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
+import occtScriptUrl from "occt-import-js/dist/occt-import-js.js?url";
+import occtWasmUrl from "occt-import-js/dist/occt-import-js.wasm?url";
 
 type OcctMesh = {
   name: string;
@@ -25,6 +27,8 @@ type OcctInitializer = (options?: {
   locateFile?: (path: string) => string;
 }) => Promise<OcctModule>;
 
+let occtInitializerPromise: Promise<OcctInitializer> | undefined;
+
 export async function loadRocketModel(url: string): Promise<THREE.Object3D> {
   const extension = url.split("?")[0].split(".").pop()?.toLowerCase();
 
@@ -47,17 +51,14 @@ export async function loadRocketModel(url: string): Promise<THREE.Object3D> {
 }
 
 async function loadStepModel(url: string): Promise<THREE.Object3D> {
-  const [{ default: initializeOcct }, { default: wasmUrl }] = await Promise.all([
-    import("occt-import-js") as Promise<{ default: OcctInitializer }>,
-    import("occt-import-js/dist/occt-import-js.wasm?url"),
-  ]);
+  const initializeOcct = await loadOcctInitializer();
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`STEP dosyasi alinamadi (${response.status}).`);
   }
 
   const occt = await initializeOcct({
-    locateFile: (path) => (path.endsWith(".wasm") ? wasmUrl : path),
+    locateFile: (path) => (path.endsWith(".wasm") ? occtWasmUrl : path),
   });
   const result = occt.ReadStepFile(
     new Uint8Array(await response.arrayBuffer()),
@@ -99,6 +100,35 @@ async function loadStepModel(url: string): Promise<THREE.Object3D> {
   return group;
 }
 
+function loadOcctInitializer(): Promise<OcctInitializer> {
+  if (window.occtimportjs) {
+    return Promise.resolve(window.occtimportjs);
+  }
+  if (occtInitializerPromise) {
+    return occtInitializerPromise;
+  }
+
+  occtInitializerPromise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = occtScriptUrl;
+    script.async = true;
+    script.onload = () => {
+      if (window.occtimportjs) {
+        resolve(window.occtimportjs);
+        return;
+      }
+      reject(new Error("OpenCascade yukleyicisi baslatilamadi."));
+    };
+    script.onerror = () => {
+      occtInitializerPromise = undefined;
+      reject(new Error("OpenCascade script dosyasi yuklenemedi."));
+    };
+    document.head.appendChild(script);
+  });
+
+  return occtInitializerPromise;
+}
+
 function applyRocketMaterial(object: THREE.Object3D) {
   const material = new THREE.MeshStandardMaterial({
     color: 0xe8edf3,
@@ -113,4 +143,10 @@ function applyRocketMaterial(object: THREE.Object3D) {
     }
     child.material = material;
   });
+}
+
+declare global {
+  interface Window {
+    occtimportjs?: OcctInitializer;
+  }
 }
