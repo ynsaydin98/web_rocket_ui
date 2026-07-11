@@ -643,6 +643,128 @@
 }
 .mc-sekans-btn--eeprom-yaz:hover { background: rgba(245, 197, 66, .2); }
 
+/* ---- reusable EEPROM table ---- */
+.mc-eeprom {
+  flex: 1;
+  min-height: 220px;
+}
+.mc-eeprom__tip-rozeti {
+  padding: 3px 7px;
+  border: 1px solid #223140;
+  border-radius: 4px;
+  background: #0b131c;
+  color: #7fd6e8;
+  font: 700 8px "JetBrains Mono";
+  letter-spacing: .08em;
+}
+.mc-eeprom__tablo-sarici {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 8px 10px 0;
+  border: 1px solid #16202c;
+  border-radius: 7px;
+}
+.mc-eeprom__tablo {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font: 600 10px "JetBrains Mono";
+  color: #c3d0dc;
+}
+.mc-eeprom__tablo th:nth-child(1) { width: 36%; }
+.mc-eeprom__tablo th:nth-child(2),
+.mc-eeprom__tablo th:nth-child(3) { width: 32%; }
+.mc-eeprom__tablo th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 8px 6px;
+  background: #0b121a;
+  border-bottom: 1px solid #16202c;
+  color: #7f92a4;
+  font: 600 8.5px "Chakra Petch";
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.mc-eeprom__tablo td {
+  padding: 4px 5px;
+  border-bottom: 1px solid #101a24;
+  text-align: center;
+}
+.mc-eeprom__parametre {
+  color: #dbe6ef;
+  text-align: left;
+  font: 700 10px "Chakra Petch";
+  letter-spacing: .06em;
+}
+.mc-eeprom__tablo input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 5px 7px;
+  border: 1px solid #223140;
+  border-radius: 4px;
+  background: #08111a;
+  color: #c3d0dc;
+  font: 600 9.5px "JetBrains Mono";
+  text-align: right;
+}
+.mc-eeprom__tablo input:disabled {
+  border-color: #182636;
+  background: #0b131c;
+  color: #748699;
+  cursor: not-allowed;
+}
+.mc-eeprom__deger input {
+  border-color: #2a4a5e;
+  background: #08111a;
+  color: #e6f1ff;
+}
+.mc-eeprom__tablo input:focus {
+  outline: none;
+  border-color: #39c0d6;
+}
+.mc-eeprom input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.mc-eeprom input[type="number"]::-webkit-outer-spin-button,
+.mc-eeprom input[type="number"]::-webkit-inner-spin-button {
+  display: none;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.mc-eeprom__aksiyonlar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 10px;
+}
+.mc-eeprom-btn {
+  padding: 10px 8px;
+  border-radius: 6px;
+  border: 1px solid #2a4a5e;
+  background: #0e1822;
+  color: #7fd6e8;
+  font: 700 10px "Chakra Petch";
+  letter-spacing: .08em;
+  cursor: pointer;
+}
+.mc-eeprom-btn:hover {
+  border-color: #39c0d6;
+  background: rgba(57, 192, 214, .12);
+}
+.mc-eeprom-btn--gonder {
+  border-color: #2f8f5c;
+  background: rgba(57, 224, 138, .12);
+  color: #5fe9a3;
+}
+.mc-eeprom-btn--gonder:hover {
+  background: rgba(57, 224, 138, .22);
+}
+
 @media (max-width: 1500px) {
   .mc-main {
     grid-template-columns: 320px 1fr;

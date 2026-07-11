@@ -2,6 +2,7 @@ import { ManuelKomutPanel } from "../features/missionControl/components/ManuelKo
 import { MissionControlSchematic } from "../features/missionControl/components/MissionControlSchematic";
 import { MissionControlGraph } from "../features/missionControl/components/MissionControlGraph";
 import { MissionControlSequencePanel } from "../features/missionControl/components/MissionControlSequencePanel";
+import { MKUEepromPanel } from "../features/dashboard/components/ortak/MKUEepromPanel";
 import { SekansSecimPanel } from "../features/missionControl/components/SekansSecimPanel";
 import { buildMissionControlView } from "../features/missionControl/mappers/missionControlViewMapper";
 import "../features/missionControl/missionControl.css";
@@ -27,6 +28,7 @@ export function CommandsPage() {
         </section>
         <aside className="mc-sequence">
           <MissionControlSequencePanel view={view} />
+          <MKUEepromPanel />
         </aside>
       </main>
     </div>

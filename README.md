@@ -137,6 +137,7 @@ export const MessageTypes = {
   MKUSekansEepromYazPaket: "MKUSekansEepromYazPaket",
   MKUSekansEepromOkuPaket: "MKUSekansEepromOkuPaket",
   MKUItkiKomutaPaket: "MKUItkiKomutaPaket",
+  MKUEepromPaket: "MKUEepromPaket",
 } as const;
 ```
 
@@ -188,6 +189,8 @@ Tanımlı komutlar (`src/commands/`):
 | `sekansKomut`      | `SekansAl`     | `{}`                | Ünitede yüklü sekansı sorgular            |
 | `sekansKomut`      | `SekansEepromYaz` | `{}`             | Güncel sekansın EEPROM'a yazılmasını ister |
 | `sekansKomut`      | `SekansEepromOku` | `{}`             | EEPROM'daki sekansı sorgular              |
+| `mkuEepromKomut`   | `Al`           | `{}`                | MKU EEPROM paketini sorgular (Komut & Sekans) |
+| `mkuEepromKomut`   | `Gonder`       | `MKUEepromGonderPaket { deger1..deger7 }` | MKU EEPROM içindeki varsayılan olmayan değerleri gönderir |
 
 ## Proje Yapısı
 
@@ -209,11 +212,12 @@ src/
  │       ├── mkuYoklamaPaket.ts
  │       ├── mkuVersiyonPaket.ts
  │       ├── mkuKomutPaket.ts             # manuel vana/ateşleyici aç-kapat komutu
- │       ├── mkuItkiKomutaPaket.ts        # sekans seçim tablosu cevap paketi
- │       ├── mkuSekansGonderPaket.ts      # sekans adım tipi + gönderme paketi
- │       ├── mkuSekansAlPaket.ts
- │       ├── mkuSekansEepromYazPaket.ts
- │       └── mkuSekansEepromOkuPaket.ts
+│       ├── mkuItkiKomutaPaket.ts        # sekans seçim tablosu cevap paketi
+│       ├── mkuSekansGonderPaket.ts      # sekans adım tipi + gönderme paketi
+│       ├── mkuSekansAlPaket.ts
+│       ├── mkuSekansEepromYazPaket.ts
+│       ├── mkuSekansEepromOkuPaket.ts
+│       └── mkuEepromPaket.ts            # varsayılan + ayarlanabilir EEPROM değerleri
  │
  ├── ui-models/                   # UI'ya özel sadeleştirilmiş modeller
  │   └── mku/
@@ -235,7 +239,8 @@ src/
  │   ├── acilDurdurKomut/
  │   ├── manuelValfKomut/
  │   ├── mkuKomut/                # MANUEL KOMUT paneli (VanaKomut)
- │   └── sekansKomut/             # SekansGonder / SekansAl / SekansEepromYaz / SekansEepromOku
+│   ├── sekansKomut/             # SekansGonder / SekansAl / SekansEepromYaz / SekansEepromOku
+│   └── mkuEepromKomut/          # MKU EEPROM Al / Gonder
  │
  ├── realtime/                    # WebSocket bağlantısı + dispatcher + handler'lar
  │   ├── websocketClient.ts
@@ -456,6 +461,7 @@ Paneller:
 - **P&ID mimik şeması**: oksitleyici tankı (N₂O) → manuel vana → itki vanası → manifold → yanma odası → nozzle; canlı vana/ateşleyici durumları ve sensör rozetleri.
 - **Canlı telemetri grafiği**: basınç/sıcaklık serileri.
 - **Sekans kontrol paneli**: SEKANS BAŞLAT, kilit + ACİL DURDUR, manuel vana anahtarı ve 4 adımlı faz listesi.
+- **MKU EEPROM paneli** (`MKUEepromPanel.tsx`): `MKUEepromPaket` asenkron geldiğinde tabloyu yeniler. Her parametre satırında `Varsayılan` ve `Değer` sütunları yan yana gösterilir; varsayılan sütunu yalnızca okunur, değer sütunu kullanıcı tarafından değiştirilebilir. AL butonu `MKUEepromPaket / Al` komutunu boş payload ile gönderir; GONDER butonu yalnızca varsayılan olmayan `deger1..deger7` alanlarını payload olarak yollar. Tablo altyapısı `EepromTablo.tsx` ile tekrar kullanılabilir yapıdadır.
 
 Komut davranışları:
 

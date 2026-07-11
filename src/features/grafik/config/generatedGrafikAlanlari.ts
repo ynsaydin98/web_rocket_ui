@@ -10,6 +10,69 @@ export type GeneratedGrafikKaynakAlanlari = {
 
 export const GENERATED_GRAFIK_ALANLARI = [
   {
+    "messageTypeName": "MKUEepromPaket",
+    "label": "MKUEeprom Paket",
+    "source": "src/ui-models/mku/mkuEepromPaketUiModel.ts",
+    "alanlar": [
+      {
+        "key": "varsayilan_deger1",
+        "label": "varsayilan_deger1"
+      },
+      {
+        "key": "varsayilan_deger2",
+        "label": "varsayilan_deger2"
+      },
+      {
+        "key": "varsayilan_deger3",
+        "label": "varsayilan_deger3"
+      },
+      {
+        "key": "varsayilan_deger4",
+        "label": "varsayilan_deger4"
+      },
+      {
+        "key": "varsayilan_deger5",
+        "label": "varsayilan_deger5"
+      },
+      {
+        "key": "varsayilan_deger6",
+        "label": "varsayilan_deger6"
+      },
+      {
+        "key": "varsayilan_deger7",
+        "label": "varsayilan_deger7"
+      },
+      {
+        "key": "deger1",
+        "label": "deger1"
+      },
+      {
+        "key": "deger2",
+        "label": "deger2"
+      },
+      {
+        "key": "deger3",
+        "label": "deger3"
+      },
+      {
+        "key": "deger4",
+        "label": "deger4"
+      },
+      {
+        "key": "deger5",
+        "label": "deger5"
+      },
+      {
+        "key": "deger6",
+        "label": "deger6"
+      },
+      {
+        "key": "deger7",
+        "label": "deger7"
+      }
+    ]
+  },
+  {
     "messageTypeName": "MKUItkiDiagnostikPaket",
     "label": "MKUItki Diagnostik Paket",
     "source": "src/ui-models/mku/mkuItkiDiagnostikPaketUiModel.ts",
