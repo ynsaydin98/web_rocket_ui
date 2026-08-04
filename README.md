@@ -190,7 +190,7 @@ Tanımlı komutlar (`src/commands/`):
 | `sekansKomut`      | `SekansEepromYaz` | `{}`             | Güncel sekansın EEPROM'a yazılmasını ister |
 | `sekansKomut`      | `SekansEepromOku` | `{}`             | EEPROM'daki sekansı sorgular              |
 | `mkuEepromKomut`   | `Al`           | `{}`                | MKU EEPROM paketini sorgular (Komut & Sekans) |
-| `mkuEepromKomut`   | `Gonder`       | `MKUEepromGonderPaket { deger1..deger7 }` | MKU EEPROM içindeki varsayılan olmayan değerleri gönderir |
+| `mkuEepromKomut`   | `Gonder`       | `MKUEepromGonderPaket { parametre1..parametre4 }` | MKU EEPROM içindeki varsayılan olmayan 9 elemanlı parametre dizilerini gönderir |
 
 ## Proje Yapısı
 
@@ -461,7 +461,7 @@ Paneller:
 - **P&ID mimik şeması**: oksitleyici tankı (N₂O) → manuel vana → itki vanası → manifold → yanma odası → nozzle; canlı vana/ateşleyici durumları ve sensör rozetleri.
 - **Canlı telemetri grafiği**: basınç/sıcaklık serileri.
 - **Sekans kontrol paneli**: SEKANS BAŞLAT, kilit + ACİL DURDUR, manuel vana anahtarı ve 4 adımlı faz listesi.
-- **MKU EEPROM paneli** (`MKUEepromPanel.tsx`): `MKUEepromPaket` asenkron geldiğinde tabloyu yeniler. Her parametre satırında `Varsayılan` ve `Değer` sütunları yan yana gösterilir; varsayılan sütunu yalnızca okunur, değer sütunu kullanıcı tarafından değiştirilebilir. AL butonu `MKUEepromPaket / Al` komutunu boş payload ile gönderir; GONDER butonu yalnızca varsayılan olmayan `deger1..deger7` alanlarını payload olarak yollar. Tablo altyapısı `EepromTablo.tsx` ile tekrar kullanılabilir yapıdadır.
+- **MKU EEPROM paneli** (`MKUEepromPanel.tsx`): `MKUEepromPaket` asenkron geldiğinde tabloyu yeniler. Paket `varsayilan_parametre1..4` ve `parametre1..4` alanlarından oluşur; her alan 9 elemanlı sayı dizisidir ve tablo bu dizileri 36 satır olarak gösterir. Her satırda `Varsayılan` ve `Değer` sütunları yan yana gösterilir; varsayılan sütunu yalnızca okunur, değer sütunu kullanıcı tarafından değiştirilebilir. AL butonu `MKUEepromPaket / Al` komutunu boş payload ile gönderir; GONDER butonu yalnızca varsayılan olmayan `parametre1..4` dizilerini payload olarak yollar. Tablo altyapısı `EepromTablo.tsx` ile tekrar kullanılabilir yapıdadır.
 
 Komut davranışları:
 
@@ -527,3 +527,8 @@ Aşağıdaki değişikliklerde `README.md` güncellenmelidir:
 - Mimari karar değişirse
 
 Sadece küçük görsel/CSS değişikliklerinde README güncellemek zorunlu değildir.
+## Admin ve Marka Ayarlari
+
+- Komut gonderme `sendCommand` icinde merkezi olarak kilitlidir. Hata Ayiklama (`/debug`) ekranindaki Admin Girisi panelinde gomulu sifre dogru girildiginde yalnizca o tarayici oturumunda komut yetkisi acilir.
+- Gomulu admin sifresi `src/features/debug/store/adminSessionStore.ts` icindeki `EMBEDDED_ADMIN_PASSWORD` sabitinden degistirilir.
+- Ust bardaki sol logo yerel dosyadan okunur. PNG logoyu `public/baykar-logo.png` olarak ekleyin; build ciktisinda ayni path ile yayinlanir.

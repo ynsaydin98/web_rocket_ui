@@ -5,6 +5,7 @@ export type EepromAlanTanim<TModel extends object> = {
   etiket: string;
   varsayilanKey: keyof TModel;
   degerKey: keyof TModel;
+  index?: number;
 };
 
 type Props<TModel extends object, TPayload extends object> = {
@@ -38,11 +39,28 @@ export function EepromTablo<
     setDuzenlenenModel(model ?? bosModel);
   }, [bosModel, lastUpdateId, model]);
 
-  const degerGuncelle = (key: keyof TModel, value: number) => {
-    setDuzenlenenModel((onceki) => ({
-      ...onceki,
-      [key]: value,
-    }));
+  const degerGuncelle = (
+    key: keyof TModel,
+    value: number,
+    index?: number,
+  ) => {
+    setDuzenlenenModel((onceki) => {
+      if (index === undefined) {
+        return {
+          ...onceki,
+          [key]: value,
+        };
+      }
+
+      const currentValue = onceki[key];
+      const nextValue = Array.isArray(currentValue) ? [...currentValue] : [];
+      nextValue[index] = value;
+
+      return {
+        ...onceki,
+        [key]: nextValue,
+      };
+    });
   };
 
   return (
@@ -66,12 +84,16 @@ export function EepromTablo<
           </thead>
           <tbody>
             {alanlar.map((alan) => (
-              <tr key={String(alan.degerKey)}>
+              <tr key={`${String(alan.degerKey)}-${alan.index ?? "single"}`}>
                 <td className="mc-eeprom__parametre">{alan.etiket}</td>
                 <td>
                   <input
                     type="number"
-                    value={readNumberValue(duzenlenenModel, alan.varsayilanKey)}
+                    value={readNumberValue(
+                      duzenlenenModel,
+                      alan.varsayilanKey,
+                      alan.index,
+                    )}
                     disabled
                     aria-label={`${alan.etiket} varsayilan degeri`}
                   />
@@ -79,13 +101,18 @@ export function EepromTablo<
                 <td className="mc-eeprom__deger">
                   <input
                     type="number"
-                    value={readNumberValue(duzenlenenModel, alan.degerKey)}
+                    value={readNumberValue(
+                      duzenlenenModel,
+                      alan.degerKey,
+                      alan.index,
+                    )}
                     aria-label={`${alan.etiket} degeri`}
                     onChange={(event) => {
                       const sayi = event.target.valueAsNumber;
                       degerGuncelle(
                         alan.degerKey,
                         Number.isFinite(sayi) ? sayi : 0,
+                        alan.index,
                       );
                     }}
                   />
@@ -115,9 +142,9 @@ export function EepromTablo<
 function buildBosModel<TModel extends object>(
   alanlar: EepromAlanTanim<TModel>[],
 ): TModel {
-  return alanlar.reduce<Record<string, number>>((model, alan) => {
-    model[String(alan.varsayilanKey)] = 0;
-    model[String(alan.degerKey)] = 0;
+  return alanlar.reduce<Record<string, unknown>>((model, alan) => {
+    setInitialValue(model, alan.varsayilanKey, alan.index);
+    setInitialValue(model, alan.degerKey, alan.index);
     return model;
   }, {}) as TModel;
 }
@@ -125,7 +152,32 @@ function buildBosModel<TModel extends object>(
 function readNumberValue<TModel extends object>(
   model: TModel,
   key: keyof TModel,
+  index?: number,
 ): number {
   const value = model[key];
+  if (index !== undefined) {
+    return Array.isArray(value) && typeof value[index] === "number"
+      ? value[index]
+      : 0;
+  }
+
   return typeof value === "number" ? value : 0;
+}
+
+function setInitialValue<TModel extends object>(
+  model: Record<string, unknown>,
+  key: keyof TModel,
+  index?: number,
+) {
+  const modelKey = String(key);
+  if (index === undefined) {
+    model[modelKey] = 0;
+    return;
+  }
+
+  const currentValue = Array.isArray(model[modelKey])
+    ? (model[modelKey] as number[])
+    : [];
+  currentValue[index] = 0;
+  model[modelKey] = currentValue;
 }

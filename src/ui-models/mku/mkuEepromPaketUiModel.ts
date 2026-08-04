@@ -1,16 +1,23 @@
+export type Eeprom9Ui = [
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+];
+
 export type MKUEepromPaketUiModel = {
-  varsayilan_deger1: number;
-  varsayilan_deger2: number;
-  varsayilan_deger3: number;
-  varsayilan_deger4: number;
-  varsayilan_deger5: number;
-  varsayilan_deger6: number;
-  varsayilan_deger7: number;
-  deger1: number;
-  deger2: number;
-  deger3: number;
-  deger4: number;
-  deger5: number;
-  deger6: number;
-  deger7: number;
+  varsayilan_parametre1: Eeprom9Ui;
+  varsayilan_parametre2: Eeprom9Ui;
+  varsayilan_parametre3: Eeprom9Ui;
+  varsayilan_parametre4: Eeprom9Ui;
+
+  parametre1: Eeprom9Ui;
+  parametre2: Eeprom9Ui;
+  parametre3: Eeprom9Ui;
+  parametre4: Eeprom9Ui;
 };

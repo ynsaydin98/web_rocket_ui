@@ -43,13 +43,14 @@ export function TopBar() {
     <header className="top-bar">
       <div className="top-bar__primary">
         <div className="top-bar__identity">
-          <span className="rocket-logo" aria-hidden="true">
-            <i />
-          </span>
-          <div>
-            <h1>{appConfig.appName}</h1>
-            <p>GÖREV KONTROL SİSTEMİ</p>
-          </div>
+          <img
+            className="top-bar__brand-logo"
+            src={appConfig.brandLogoPath}
+            alt={appConfig.appName}
+            onError={(event) => {
+              event.currentTarget.style.visibility = "hidden";
+            }}
+          />
         </div>
         <div className="top-bar__mission">
           <div className="mission-box" aria-label="Geri sayım">

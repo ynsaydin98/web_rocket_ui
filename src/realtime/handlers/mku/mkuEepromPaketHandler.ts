@@ -1,7 +1,10 @@
 import { MessageTypes } from "../../../contracts/messageTypes";
 import type { RealtimeMessageEnvelope } from "../../../contracts/realtimeMessageEnvelope";
 import { mapMKUEepromPaketToOzet } from "../../../mapper/mku/mkuEepromPaketMapper";
-import type { MKUEepromPaket } from "../../../paketler/mku/mkuEepromPaket";
+import type {
+  Eeprom9,
+  MKUEepromPaket,
+} from "../../../paketler/mku/mkuEepromPaket";
 import { ingestMKUEepromPaketForUi } from "../../../storeServices/mku/mkuEepromPaketUiPublisher";
 import { registerRealtimeHandler } from "../../realtimeDispatcher";
 
@@ -26,19 +29,21 @@ function paketCheck(payload: unknown): payload is MKUEepromPaket {
 
   const value = payload as Partial<MKUEepromPaket>;
   return (
-    typeof value.varsayilan_deger1 === "number" &&
-    typeof value.varsayilan_deger2 === "number" &&
-    typeof value.varsayilan_deger3 === "number" &&
-    typeof value.varsayilan_deger4 === "number" &&
-    typeof value.varsayilan_deger5 === "number" &&
-    typeof value.varsayilan_deger6 === "number" &&
-    typeof value.varsayilan_deger7 === "number" &&
-    typeof value.deger1 === "number" &&
-    typeof value.deger2 === "number" &&
-    typeof value.deger3 === "number" &&
-    typeof value.deger4 === "number" &&
-    typeof value.deger5 === "number" &&
-    typeof value.deger6 === "number" &&
-    typeof value.deger7 === "number"
+    isEeprom9(value.varsayilan_parametre1) &&
+    isEeprom9(value.varsayilan_parametre2) &&
+    isEeprom9(value.varsayilan_parametre3) &&
+    isEeprom9(value.varsayilan_parametre4) &&
+    isEeprom9(value.parametre1) &&
+    isEeprom9(value.parametre2) &&
+    isEeprom9(value.parametre3) &&
+    isEeprom9(value.parametre4)
+  );
+}
+
+function isEeprom9(value: unknown): value is Eeprom9 {
+  return (
+    Array.isArray(value) &&
+    value.length === 9 &&
+    value.every((item) => typeof item === "number")
   );
 }

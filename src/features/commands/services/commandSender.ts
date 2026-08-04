@@ -1,10 +1,19 @@
 import type { CommandEnvelope } from "../../../contracts/commandEnvelope";
+import { useAdminSessionStore } from "../../debug/store/adminSessionStore";
 import { sendWebSocketMessage } from "../../../realtime/websocketClient";
 import { useCommandStore } from "../store/commandStore";
 
 export function sendCommand<TPayload>(
   command: CommandEnvelope<TPayload>,
 ): boolean {
+  if (!useAdminSessionStore.getState().isAdmin) {
+    useCommandStore
+      .getState()
+      .setCommandError("Admin yetkisi olmadigi icin komut gonderilemedi.");
+
+    return false;
+  }
+
   const sent = sendWebSocketMessage(command);
 
   if (!sent) {

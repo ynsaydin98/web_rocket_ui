@@ -2,20 +2,22 @@ import {
   createMKUEepromAlKomut,
   createMKUEepromGonderKomut,
 } from "../../../../commands/mkuEepromKomut/mkuEepromKomutFactory";
-import type { MKUEepromGonderPaket } from "../../../../paketler/mku/mkuEepromPaket";
+import type {
+  Eeprom9,
+  MKUEepromGonderPaket,
+} from "../../../../paketler/mku/mkuEepromPaket";
 import { sendCommand } from "../../../commands/services/commandSender";
 import { useMKUEepromPaketStore } from "../../../../store/mku/mkuEepromPaketStore";
 import type { MKUEepromPaketUiModel } from "../../../../ui-models/mku/mkuEepromPaketUiModel";
 import { EepromTablo, type EepromAlanTanim } from "./EepromTablo";
 
+const EEPROM_DIZI_UZUNLUGU = 9;
+
 const MKU_EEPROM_ALANLARI: EepromAlanTanim<MKUEepromPaketUiModel>[] = [
-  { etiket: "Deger 1", varsayilanKey: "varsayilan_deger1", degerKey: "deger1" },
-  { etiket: "Deger 2", varsayilanKey: "varsayilan_deger2", degerKey: "deger2" },
-  { etiket: "Deger 3", varsayilanKey: "varsayilan_deger3", degerKey: "deger3" },
-  { etiket: "Deger 4", varsayilanKey: "varsayilan_deger4", degerKey: "deger4" },
-  { etiket: "Deger 5", varsayilanKey: "varsayilan_deger5", degerKey: "deger5" },
-  { etiket: "Deger 6", varsayilanKey: "varsayilan_deger6", degerKey: "deger6" },
-  { etiket: "Deger 7", varsayilanKey: "varsayilan_deger7", degerKey: "deger7" },
+  ...diziAlanlari("Parametre 1", "varsayilan_parametre1", "parametre1"),
+  ...diziAlanlari("Parametre 2", "varsayilan_parametre2", "parametre2"),
+  ...diziAlanlari("Parametre 3", "varsayilan_parametre3", "parametre3"),
+  ...diziAlanlari("Parametre 4", "varsayilan_parametre4", "parametre4"),
 ];
 
 export function MKUEepromPanel() {
@@ -40,12 +42,26 @@ export function MKUEepromPanel() {
 
 function buildPayload(model: MKUEepromPaketUiModel): MKUEepromGonderPaket {
   return {
-    deger1: model.deger1,
-    deger2: model.deger2,
-    deger3: model.deger3,
-    deger4: model.deger4,
-    deger5: model.deger5,
-    deger6: model.deger6,
-    deger7: model.deger7,
+    parametre1: cloneEeprom9(model.parametre1),
+    parametre2: cloneEeprom9(model.parametre2),
+    parametre3: cloneEeprom9(model.parametre3),
+    parametre4: cloneEeprom9(model.parametre4),
   };
+}
+
+function diziAlanlari(
+  etiket: string,
+  varsayilanKey: keyof MKUEepromPaketUiModel,
+  degerKey: keyof MKUEepromPaketUiModel,
+): EepromAlanTanim<MKUEepromPaketUiModel>[] {
+  return Array.from({ length: EEPROM_DIZI_UZUNLUGU }, (_, index) => ({
+    etiket: `${etiket} [${index}]`,
+    varsayilanKey,
+    degerKey,
+    index,
+  }));
+}
+
+function cloneEeprom9(value: readonly number[]): Eeprom9 {
+  return [...value] as Eeprom9;
 }
