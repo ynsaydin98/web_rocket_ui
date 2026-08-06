@@ -35,6 +35,10 @@ import {
   startMKUEepromPaketUiPublisher,
   stopMKUEepromPaketUiPublisher,
 } from "../storeServices/mku/mkuEepromPaketUiPublisher";
+import {
+  startModemDeviceIpPaketUiPublisher,
+  stopModemDeviceIpPaketUiPublisher,
+} from "../storeServices/modem/modemDeviceIpPaketUiPublisher";
 
 const DashboardPage = lazy(() =>
   import("../pages/DashboardPage").then((module) => ({
@@ -115,6 +119,10 @@ function App() {
     startMKUEepromPaketUiPublisher(appConfig.debugUiPublishIntervalMs);
     //#endregion
 
+    //#region MODEM
+    startModemDeviceIpPaketUiPublisher(appConfig.debugUiPublishIntervalMs);
+    //#endregion
+
     startGrafikVeriGecmisi();
 
     startDebugMessagePublisher({
@@ -133,6 +141,10 @@ function App() {
       stopMKUItkiDiagnostikPaketUiPublisher();
       stopMKUItkiKomutaPaketUiPublisher();
       stopMKUEepromPaketUiPublisher();
+      //#endregion
+
+      //#region MODEM
+      stopModemDeviceIpPaketUiPublisher();
       //#endregion
 
       stopGrafikVeriGecmisi();

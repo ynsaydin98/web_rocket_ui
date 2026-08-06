@@ -12,6 +12,11 @@ export type AlGonderDataAlanTanim<TModel extends object> = {
   tip?: AlGonderDegerTipi;
   /** Sadece "metin" tipindeki alanlar icin karakter siniri. */
   maxUzunluk?: number;
+  /**
+   * Model henuz yokken gosterilecek deger. Verilmezse metin alanlari "",
+   * sayi alanlari 0 ile baslar. Ornegin IP alani icin "0.0.0.0" verilebilir.
+   */
+  bosDeger?: AlanDeger;
 };
 
 type AlanDeger = number | string;
@@ -166,9 +171,19 @@ function buildBosModel<TModel extends object>(
   alanlar: AlGonderDataAlanTanim<TModel>[],
 ): TModel {
   return alanlar.reduce<Record<string, unknown>>((model, alan) => {
-    setInitialValue(model, alan.degerKey, alan.index, metinAlaniMi(alan));
+    setInitialValue(model, alan.degerKey, alan.index, bosDegerHesapla(alan));
     return model;
   }, {}) as TModel;
+}
+
+function bosDegerHesapla<TModel extends object>(
+  alan: AlGonderDataAlanTanim<TModel>,
+): AlanDeger {
+  if (alan.bosDeger !== undefined) {
+    return alan.bosDeger;
+  }
+
+  return metinAlaniMi(alan) ? "" : 0;
 }
 
 function readNumberValue<TModel extends object>(
@@ -210,10 +225,9 @@ function setInitialValue<TModel extends object>(
   model: Record<string, unknown>,
   key: keyof TModel,
   index: number | undefined,
-  metinMi: boolean,
+  bosDeger: AlanDeger,
 ) {
   const modelKey = String(key);
-  const bosDeger: AlanDeger = metinMi ? "" : 0;
 
   if (index === undefined) {
     model[modelKey] = bosDeger;
