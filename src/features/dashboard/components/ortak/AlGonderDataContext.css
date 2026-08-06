@@ -1,0 +1,12 @@
+.mc-eeprom--al-gonder .mc-eeprom__tablo th:nth-child(1) {
+  width: 55%;
+}
+
+.mc-eeprom--al-gonder .mc-eeprom__tablo th:nth-child(2) {
+  width: 45%;
+}
+
+.mc-eeprom--al-gonder .mc-eeprom__tablo input[type="text"] {
+  text-align: left;
+  letter-spacing: .04em;
+}
