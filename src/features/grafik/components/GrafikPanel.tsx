@@ -70,6 +70,12 @@ function buildPoints(
 
 /** Tek bir kullanıcı tanımlı zaman serisi grafiği: legend, crosshair ve tooltip ile. */
 export function GrafikPanel({ tanim, onRemove }: Props) {
+  // React Compiler devre dışı: getGrafikGecmisi() render sırasında store
+  // dışındaki ring buffer'dan okuyor. Derleyici bu çağrıyı `tanim.kaynakId`e
+  // göre önbelleğe aldığı için tampon yerinde değişse bile panel ilk okuduğu
+  // diziyle kalıyordu (bkz. GostergeKarti'ndaki aynı gerekçe).
+  "use no memo";
+
   // Panel, veri geçmişi versiyonuna KENDİSİ subscribe olur; parent'ın
   // render'ına güvenilmez (React, props'u değişmeyen çocukları atlayabilir).
   useGrafikVeriStore((s) => s.versiyon);

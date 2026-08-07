@@ -24,6 +24,12 @@ function hesaplaDurum(
 
 /** Tek parametreyi büyük puntoyla gösteren kart; limitler config'de gömülüdür. */
 export function GostergeKarti({ tanim }: Props) {
+  // React Compiler devre dışı: getGostergeDeger() render sırasında store
+  // dışından (grafik kaynak snapshot'ından) okuma yapıyor. Derleyici bu
+  // çağrıyı tek girdisi olan `tanim`e göre önbelleğe alıyor; `tanim` modül
+  // seviyesinde sabit olduğu için değer ilk render'da donup kalıyordu.
+  "use no memo";
+
   // Kart, canlı değerin versiyon sayacına KENDİSİ subscribe olur; parent'ın
   // render'ına güvenilmez (grafik panellerindeki desenle aynı gerekçe).
   useGrafikVeriStore((s) => s.versiyon);
