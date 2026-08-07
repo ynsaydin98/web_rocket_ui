@@ -2,7 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import "./EepromTablo.css";
 import "./AlGonderDataContext.css";
 
-export type AlGonderDegerTipi = "sayi" | "metin";
+export type AlGonderDegerTipi = "sayi" | "metin" | "secim";
+
+/**
+ * "secim" tipindeki alanlarin acilir listesi. deger modelde tutulan ham
+ * kod (ornegin enum degeri), etiket ise arayuzde gorunen metindir.
+ */
+export type AlGonderSecenek = {
+  deger: AlanDeger;
+  etiket: string;
+};
 
 export type AlGonderDataAlanTanim<TModel extends object> = {
   etiket: string;
@@ -12,9 +21,12 @@ export type AlGonderDataAlanTanim<TModel extends object> = {
   tip?: AlGonderDegerTipi;
   /** Sadece "metin" tipindeki alanlar icin karakter siniri. */
   maxUzunluk?: number;
+  /** Sadece "secim" tipindeki alanlar icin acilir liste secenekleri. */
+  secenekler?: readonly AlGonderSecenek[];
   /**
    * Model henuz yokken gosterilecek deger. Verilmezse metin alanlari "",
-   * sayi alanlari 0 ile baslar. Ornegin IP alani icin "0.0.0.0" verilebilir.
+   * sayi alanlari 0, secim alanlari ilk secenek ile baslar. Ornegin IP alani
+   * icin "0.0.0.0" verilebilir.
    */
   bosDeger?: AlanDeger;
 };
@@ -101,43 +113,11 @@ export function AlGonderDataContext<
               <tr key={`${String(alan.degerKey)}-${alan.index ?? "single"}`}>
                 <td className="mc-eeprom__parametre">{alan.etiket}</td>
                 <td className="mc-eeprom__deger">
-                  {metinAlaniMi(alan) ? (
-                    <input
-                      type="text"
-                      value={readMetinValue(
-                        duzenlenenModel,
-                        alan.degerKey,
-                        alan.index,
-                      )}
-                      maxLength={alan.maxUzunluk}
-                      aria-label={`${alan.etiket} degeri`}
-                      onChange={(event) =>
-                        degerGuncelle(
-                          alan.degerKey,
-                          event.target.value,
-                          alan.index,
-                        )
-                      }
-                    />
-                  ) : (
-                    <input
-                      type="number"
-                      value={readNumberValue(
-                        duzenlenenModel,
-                        alan.degerKey,
-                        alan.index,
-                      )}
-                      aria-label={`${alan.etiket} degeri`}
-                      onChange={(event) => {
-                        const sayi = event.target.valueAsNumber;
-                        degerGuncelle(
-                          alan.degerKey,
-                          Number.isFinite(sayi) ? sayi : 0,
-                          alan.index,
-                        );
-                      }}
-                    />
-                  )}
+                  <AlanGirdisi
+                    alan={alan}
+                    model={duzenlenenModel}
+                    onDegisim={degerGuncelle}
+                  />
                 </td>
               </tr>
             ))}
@@ -161,10 +141,83 @@ export function AlGonderDataContext<
   );
 }
 
-function metinAlaniMi<TModel extends object>(
+type AlanGirdisiProps<TModel extends object> = {
+  alan: AlGonderDataAlanTanim<TModel>;
+  model: TModel;
+  onDegisim: (key: keyof TModel, value: AlanDeger, index?: number) => void;
+};
+
+function AlanGirdisi<TModel extends object>({
+  alan,
+  model,
+  onDegisim,
+}: AlanGirdisiProps<TModel>) {
+  const ariaLabel = `${alan.etiket} degeri`;
+
+  if (alanTipi(alan) === "secim") {
+    const secenekler = alan.secenekler ?? [];
+    const mevcutDeger = okuHamDeger(model, alan.degerKey, alan.index);
+    const secilenIndex = secenekler.findIndex(
+      (secenek) => secenek.deger === mevcutDeger,
+    );
+
+    return (
+      <select
+        className="mc-eeprom__secim"
+        value={secilenIndex}
+        aria-label={ariaLabel}
+        onChange={(event) => {
+          const secilen = secenekler[Number(event.target.value)];
+          if (!secilen) return;
+
+          onDegisim(alan.degerKey, secilen.deger, alan.index);
+        }}
+      >
+        {secilenIndex === -1 && (
+          <option value={-1} disabled>
+            -
+          </option>
+        )}
+        {secenekler.map((secenek, index) => (
+          <option key={`${String(secenek.deger)}`} value={index}>
+            {secenek.etiket}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
+  if (alanTipi(alan) === "metin") {
+    return (
+      <input
+        type="text"
+        value={readMetinValue(model, alan.degerKey, alan.index)}
+        maxLength={alan.maxUzunluk}
+        aria-label={ariaLabel}
+        onChange={(event) =>
+          onDegisim(alan.degerKey, event.target.value, alan.index)
+        }
+      />
+    );
+  }
+
+  return (
+    <input
+      type="number"
+      value={readNumberValue(model, alan.degerKey, alan.index)}
+      aria-label={ariaLabel}
+      onChange={(event) => {
+        const sayi = event.target.valueAsNumber;
+        onDegisim(alan.degerKey, Number.isFinite(sayi) ? sayi : 0, alan.index);
+      }}
+    />
+  );
+}
+
+function alanTipi<TModel extends object>(
   alan: AlGonderDataAlanTanim<TModel>,
-): boolean {
-  return (alan.tip ?? "sayi") === "metin";
+): AlGonderDegerTipi {
+  return alan.tip ?? "sayi";
 }
 
 function buildBosModel<TModel extends object>(
@@ -183,7 +236,15 @@ function bosDegerHesapla<TModel extends object>(
     return alan.bosDeger;
   }
 
-  return metinAlaniMi(alan) ? "" : 0;
+  switch (alanTipi(alan)) {
+    case "metin":
+      return "";
+    case "secim":
+      // Secenek listesi bos degilse ilk secenek varsayilan kabul edilir.
+      return alan.secenekler?.[0]?.deger ?? 0;
+    default:
+      return 0;
+  }
 }
 
 function readNumberValue<TModel extends object>(
