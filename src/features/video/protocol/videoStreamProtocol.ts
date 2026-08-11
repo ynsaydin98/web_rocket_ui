@@ -5,9 +5,10 @@
  * yuksek bant genisligi gerektirdigi icin ayri bir soket ve base64 icermeyen
  * ikili format kullanir.
  *
- * Sunucu tarafi (C# .NET 6 video worker) ayri bir serviste gelistirilir; bu
- * dosyadaki baslik duzeni oradaki `VideoFrameProtocol` ile birebir ayni
- * olmalidir.
+ * Sunucu tarafi FERGANI_HAM2VERI_SERVIS icindeki video alt sistemidir; bu
+ * dosyadaki baslik duzeni oradaki `VideoStreamProtocol` sinifi ile birebir
+ * ayni olmalidir. Cozumleme (MPEG-TS demux, kare siniflandirma, SPS cozme)
+ * tamamen serviste yapilir; arayuz yalnizca cizer.
  */
 
 /** Ikili kare basligi: 20 bayt, little-endian. */

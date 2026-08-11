@@ -511,11 +511,12 @@ Arducam (roket / Jetson)
 S-band modem (hava)  ──RF──▶  S-band modem (yer)
   │  UDP / MPEG-TS (7 x 188 = 1316 baytlık datagramlar)
   ▼
-C# .NET 6 video worker (ayrı repo / ayrı servis)
-  │  UdpVideoReceiverService  -> UDP portunu dinler
-  │  MpegTsDemuxer            -> PAT/PMT -> video PID -> PES -> Annex-B erişim birimi
-  │  H264SpsParser            -> codec dizgisi + çözünürlük
-  │  VideoStreamBroadcaster   -> anahtar kare kapısı + istemci başına sınırlı kuyruk
+FERGANI_HAM2VERI_SERVIS (video alt sistemi)
+  │  UdpVideoSource        -> video UDP portunu dinler
+  │  MpegTsDemuxer         -> PAT/PMT -> video PID -> PES -> Annex-B erişim birimi + PTS
+  │  H264NalOkuyucu        -> anahtar kare / parametre seti sınıflandırması
+  │  H264SpsCozucu         -> codec dizgisi + çözünürlük
+  │  VideoBroadcastService -> anahtar kare kapısı + RVS1 çerçeveleme
   ▼
 WebSocket  ws://<host>:5001/ws/video   (ikili kareler + JSON durum mesajları)
   ▼
@@ -659,11 +660,6 @@ Adresler iki tarafta ayrı ayrı yapılandırılır ve eşleşmeleri gerekir:
 | --- | --- | --- |
 | Telemetri / komut | `Ham2Veri:WebSocket:Url` + `Path` | `VITE_WS_URL` |
 | Canlı video | `Ham2Veri:Video:Url` + `YayinYolu` | `VITE_VIDEO_WS_URL` |
-
-> Not: Sunucunun `/ws/video` ucu ile arayüzün beklediği kare biçimi henüz
-> aynı değildir (sunucu JPEG kare yayınlar, arayüz WebCodecs ile H.264
-> Annex-B bekler). Bu ayarlar bağlantının kurulmasını sağlar; görüntünün
-> çizilmesi için protokol hizalaması ayrıca yapılmalıdır.
 
 ## README Güncelleme Kuralı
 
