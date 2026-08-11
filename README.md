@@ -628,7 +628,10 @@ VITE_VIDEO_UI_PUBLISH_INTERVAL_MS=1000
 ```
 
 - `VITE_WS_URL`: telemetri/komut WebSocket bağlantı adresi.
-- `VITE_VIDEO_WS_URL`: canlı video WebSocket adresi (C# worker'daki ayrı uç).
+- `VITE_VIDEO_WS_URL`: canlı video WebSocket adresi. Sunucu tarafındaki karşılığı
+  `FERGANI_HAM2VERI_SERVIS/appsettings.json` içindeki `Ham2Veri:Video:Url` +
+  `Ham2Veri:Video:YayinYolu` değerleridir; ikisi birbiriyle tutarlı olmalıdır
+  (varsayılan: `ws://localhost:5001/ws/video`).
 - `VITE_TEST_*`: geliştirme ortamında harita ve yönelim göstergelerini test etmek için kullanılır; canlı telemetri değerleri test değerlerinin önüne geçer. (3D roket modeli bu değerleri kullanmaz; yönelimini yalnızca paket IMU verisi + duruş offseti belirler.)
 - `VITE_MODEL_*_OFFSET`: ana sayfadaki 3D roket modelinin duruş offseti (derece) için ilk varsayılanlar. Kullanıcı offseti panelin altındaki formdan canlı değiştirir; girilen değerler `localStorage`'da saklanır ve sonraki açılışlarda env varsayılanlarının önüne geçer.
 - `VITE_*_INTERVAL_MS`: publisher yayın aralıkları.
@@ -645,10 +648,22 @@ npm run dev     # geliştirme
 npm run build   # üretim derlemesi
 ```
 
-Canlı video için ayrıca C# .NET 6 video worker servisinin çalışıyor olması
-gerekir (ayrı depo). Arayüz o servise `VITE_VIDEO_WS_URL` adresinden bağlanır;
-servis kapalıyken `/video` sayfası "BAĞLANTI YOK" durumunda kalır, diğer
-sayfalar etkilenmez.
+Canlı video için ayrıca `FERGANI_HAM2VERI_SERVIS` servisinin çalışıyor ve video
+alt sisteminin açık (`Ham2Veri:Video:Aktif = true`) olması gerekir. Arayüz o
+servise `VITE_VIDEO_WS_URL` adresinden bağlanır; servis kapalıyken `/video`
+sayfası "BAĞLANTI YOK" durumunda kalır, diğer sayfalar etkilenmez.
+
+Adresler iki tarafta ayrı ayrı yapılandırılır ve eşleşmeleri gerekir:
+
+| Kanal | Sunucu ayarı | Arayüz ayarı |
+| --- | --- | --- |
+| Telemetri / komut | `Ham2Veri:WebSocket:Url` + `Path` | `VITE_WS_URL` |
+| Canlı video | `Ham2Veri:Video:Url` + `YayinYolu` | `VITE_VIDEO_WS_URL` |
+
+> Not: Sunucunun `/ws/video` ucu ile arayüzün beklediği kare biçimi henüz
+> aynı değildir (sunucu JPEG kare yayınlar, arayüz WebCodecs ile H.264
+> Annex-B bekler). Bu ayarlar bağlantının kurulmasını sağlar; görüntünün
+> çizilmesi için protokol hizalaması ayrıca yapılmalıdır.
 
 ## README Güncelleme Kuralı
 
