@@ -39,6 +39,14 @@ import {
   startModemDeviceIpPaketUiPublisher,
   stopModemDeviceIpPaketUiPublisher,
 } from "../storeServices/modem/modemDeviceIpPaketUiPublisher";
+import {
+  connectVideoWebSocket,
+  disconnectVideoWebSocket,
+} from "../features/video/services/videoWebSocketClient";
+import {
+  startVideoStreamUiPublisher,
+  stopVideoStreamUiPublisher,
+} from "../features/video/services/videoStreamUiPublisher";
 
 const DashboardPage = lazy(() =>
   import("../pages/DashboardPage").then((module) => ({
@@ -79,6 +87,12 @@ const FlightTerminationPage = lazy(() =>
 const GostergelerPage = lazy(() =>
   import("../pages/GostergelerPage").then((module) => ({
     default: module.GostergelerPage,
+  })),
+);
+
+const VideoPage = lazy(() =>
+  import("../pages/VideoPage").then((module) => ({
+    default: module.VideoPage,
   })),
 );
 
@@ -123,6 +137,11 @@ function App() {
     startModemDeviceIpPaketUiPublisher(appConfig.debugUiPublishIntervalMs);
     //#endregion
 
+    //#region VIDEO
+    startVideoStreamUiPublisher(appConfig.videoUiPublishIntervalMs);
+    connectVideoWebSocket();
+    //#endregion
+
     startGrafikVeriGecmisi();
 
     startDebugMessagePublisher({
@@ -145,6 +164,11 @@ function App() {
 
       //#region MODEM
       stopModemDeviceIpPaketUiPublisher();
+      //#endregion
+
+      //#region VIDEO
+      disconnectVideoWebSocket();
+      stopVideoStreamUiPublisher();
       //#endregion
 
       stopGrafikVeriGecmisi();
@@ -182,6 +206,7 @@ function App() {
             path="flight-termination"
             element={withPageSuspense(<FlightTerminationPage />)}
           />
+          <Route path="video" element={withPageSuspense(<VideoPage />)} />
           <Route path="debug" element={withPageSuspense(<DebugPage />)} />
         </Route>
       </Routes>

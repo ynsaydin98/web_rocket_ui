@@ -5,6 +5,7 @@ const tabs = [
   { to: "/tables", label: "Tablolar", end: false },
   { to: "/commands", label: "Komut & Sekans", end: false },
   { to: "/gostergeler", label: "Göstergeler", end: false },
+  { to: "/video", label: "Kamera", end: false },
   { to: "/flight-termination", label: "Uçuş Sonlandırma", end: false },
   { to: "/debug", label: "Hata Ayıklama", end: false },
 ];

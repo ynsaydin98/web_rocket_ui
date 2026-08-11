@@ -18,6 +18,10 @@ export const appConfig = {
   appName: "Roket Web Arayüzü",
   brandLogoPath: "/baykar-logo.png",
   websocketUrl: import.meta.env.VITE_WS_URL ?? "ws://localhost:5000/ws",
+  // Video ayri bir WebSocket ucundan ikili olarak gelir; telemetri kanalini
+  // mesgul etmemesi icin kendi baglantisini kullanir.
+  videoWebsocketUrl:
+    import.meta.env.VITE_VIDEO_WS_URL ?? "ws://localhost:5001/ws/video",
   defaultCommandTargetId: "processor-1",
   testLatitude: readOptionalNumber(import.meta.env.VITE_TEST_LATITUDE),
   testLongitude: readOptionalNumber(import.meta.env.VITE_TEST_LONGITUDE),
@@ -44,5 +48,9 @@ export const appConfig = {
   websocketReconnectDelayMs: readPositiveNumberEnv(
     import.meta.env.VITE_WS_RECONNECT_DELAY_MS,
     3000,
+  ),
+  videoUiPublishIntervalMs: readPositiveNumberEnv(
+    import.meta.env.VITE_VIDEO_UI_PUBLISH_INTERVAL_MS,
+    1000,
   ),
 } as const;

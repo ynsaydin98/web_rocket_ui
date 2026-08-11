@@ -30,6 +30,7 @@ Bu projenin amacı:
 - Three.js (ana sayfa 3D roket sahnesi)
 - OpenCascade WASM / `occt-import-js` (`.stp` ve `.step` CAD modeli desteği)
 - Leaflet (offline konum haritası)
+- WebCodecs (`VideoDecoder`) — S-band canlı video çözme
 
 ## Mimari Kurallar
 
@@ -274,6 +275,14 @@ src/
  │   ├── commands/                # genel komut gönderme altyapısı (sender + store)
  │   ├── version/                 # versiyon sorgu feature'ı
  │   ├── switching/               # anahtarlama komutları
+ │   ├── video/                   # S-band canlı video (ayrı WebSocket kanalı)
+ │   │   ├── protocol/videoStreamProtocol.ts   # ikili kare başlığı + JSON mesajları
+ │   │   ├── services/videoWebSocketClient.ts  # video WS istemcisi (telemetriden ayrı)
+ │   │   ├── services/videoDecoderService.ts   # WebCodecs H.264 çözücü + canvas
+ │   │   ├── services/videoStreamUiPublisher.ts
+ │   │   ├── store/videoStreamStore.ts
+ │   │   ├── models/videoStreamUiModel.ts
+ │   │   └── components/RoketVideoPanel.tsx
  │   └── debug/                   # ham mesaj görüntüleyici
  │
  ├── shared/                      # ortak componentler / tipler / yardımcılar
@@ -285,6 +294,7 @@ src/
      ├── TablesPage.tsx           # /tables
      ├── mku/mkuPage.tsx          # /tables/mku
      ├── CommandsPage.tsx         # /commands (Komut & Sekans)
+     ├── VideoPage.tsx            # /video (roket kamera yayını)
      └── DebugPage.tsx            # /debug
 ```
 
@@ -318,6 +328,15 @@ Paket/model bazlı komut sabitleri (`xKomut.ts`) ve `CommandEnvelope` üreten fa
 
 WebSocket bağlantısı, otomatik yeniden bağlanma, `messageType` -> handler dispatch yapısı ve paket handler'ları. Handler'lar payload'u type-guard ile doğrular; geçersiz payload konsola uyarı yazar ve akışı bozmaz. `connectionStore` ayrıca üst bardaki veri LED'ini süren `dataLive` bayrağını yönetir (2 sn veri gelmezse söner).
 
+### `src/features/video`
+
+Canlı video özelliği. `protocol/` ikili kare başlığını ve JSON durum
+mesajlarını çözer, `services/videoWebSocketClient.ts` telemetriden ayrı kendi
+WebSocket bağlantısını yönetir, `services/videoDecoderService.ts` WebCodecs ile
+çözüp canvas'a çizer, `services/videoStreamUiPublisher.ts` istatistikleri
+throttle ederek store'a yazar. Telemetri WebSocket istemcisi ve dispatcher'ı
+değiştirilmez.
+
 ### `src/features/commands`
 
 Genel komut gönderme altyapısı: `commandSender` (WebSocket'e yazma + hata durumu) ve `commandStore` (son komut/durum). Paket özel komut sabitleri burada bulunmaz; `src/commands/` altındadır.
@@ -335,6 +354,7 @@ Ortak görsel bileşenler ve sayfa componentleri. Sayfalar yalnızca feature/sha
 /commands      Komut & Sekans (itki test standı ekranı)
 /gostergeler   Göstergeler (büyük puntolu değer kartları + duruş kadranları)
 /flight-termination  Uçuş Sonlandırma (FTS karar ekranı: PT/TC sensör kutuları)
+/video         Kamera (roketten gelen S-band canlı video yayını)
 /debug         Hata ayıklama konsolu (ham WebSocket mesajları)
 ```
 
@@ -476,12 +496,122 @@ komutlarını tek birleşik tasarımda sunar.
 yenilenmezse bağlantı bayat kabul edilir ve UI store değeri otomatik olarak
 `0` yapılır.
 
+## Roket Kamera Yayını (S-Band Video)
+
+`/video` sayfası, rokete bağlı Arducam kamerasının S-band modem üzerinden yere
+inen canlı görüntüsünü gösterir.
+
+### Uçtan Uca Akış
+
+```text
+Arducam (roket / Jetson)
+  │  gst-launch-1.0 nvarguscamerasrc ! ... ! x264enc ! h264parse config-interval=1
+  │                 ! mpegtsmux alignment=7 ! udpsink host=<modem> port=<port>
+  ▼
+S-band modem (hava)  ──RF──▶  S-band modem (yer)
+  │  UDP / MPEG-TS (7 x 188 = 1316 baytlık datagramlar)
+  ▼
+C# .NET 6 video worker (ayrı repo / ayrı servis)
+  │  UdpVideoReceiverService  -> UDP portunu dinler
+  │  MpegTsDemuxer            -> PAT/PMT -> video PID -> PES -> Annex-B erişim birimi
+  │  H264SpsParser            -> codec dizgisi + çözünürlük
+  │  VideoStreamBroadcaster   -> anahtar kare kapısı + istemci başına sınırlı kuyruk
+  ▼
+WebSocket  ws://<host>:5001/ws/video   (ikili kareler + JSON durum mesajları)
+  ▼
+Arayüz: videoWebSocketClient -> videoDecoderService (WebCodecs VideoDecoder) -> canvas
+```
+
+Roket tarafındaki gstreamer boru hattı değiştirilmez. `h264parse
+config-interval=1` sayesinde SPS/PPS periyodik tekrarlandığı için arayüz akışa
+ortasından da katılabilir.
+
+### Neden Ayrı Bir WebSocket Kanalı
+
+Video ~3 Mbit/s ikili veridir. Telemetri kanalının JSON zarf sözleşmesi
+(`RealtimeMessageEnvelope` / `CommandEnvelope`) **değişmez**; video kendi
+bağlantısını kullanır. Böylece yüksek hacimli video kareleri telemetri ve komut
+mesajlarını geciktirmez, base64 kodlama maliyeti de oluşmaz.
+
+### Video Kanalı Mesaj Formatı
+
+Metin (JSON) mesajları — akış tanımı ve akış durumu:
+
+```json
+{
+  "type": "video-stream-info",
+  "codec": "avc1.42E01E",
+  "width": 1280,
+  "height": 720,
+  "annexB": true
+}
+```
+
+```json
+{
+  "type": "video-stream-status",
+  "receiving": true,
+  "message": "UDP portundan video verisi alınıyor."
+}
+```
+
+İkili video kareleri — 20 baytlık başlık + Annex-B H.264 erişim birimi
+(little-endian):
+
+| Offset | Boyut | Alan |
+| --- | --- | --- |
+| 0 | 4 | Sihirli değer `RVS1` |
+| 4 | 1 | Kare tipi (`1` = anahtar/IDR, `0` = ara kare) |
+| 5 | 1 | Bayraklar (bit0 = SPS/PPS içeriyor) |
+| 6 | 2 | Ayrılmış |
+| 8 | 8 | PTS (mikrosaniye, `int64`) |
+| 16 | 4 | Yük uzunluğu (`int32`) |
+| 20 | N | Annex-B H.264 verisi |
+
+### Arayüz Tarafı
+
+- Çözme **WebCodecs `VideoDecoder`** ile yapılır. MPEG-TS/H.264 akışı `<video>`
+  etiketiyle doğrudan oynatılamaz; MSE için fMP4'e sarmalamak ek gecikme
+  yaratacağından Annex-B veriyi doğrudan kabul eden WebCodecs tercih edildi.
+  **Chrome/Edge 94+ gerekir**; desteklemeyen tarayıcıda panel "TARAYICI
+  DESTEKLEMİYOR" durumu gösterir.
+- Çizim `videoDecoderService` içinde `requestAnimationFrame` ile canvas'a
+  yapılır. İki çizim arasında birden fazla kare çözülürse eskisi atılır
+  (en güncel kare kazanır), böylece gecikme birikmez.
+- Çözücü kuyruğu büyürse akış bir sonraki anahtar kareye atlar.
+- `RoketVideoPanel` yalnızca canvas'ı bağlar ve store'daki hazır özeti gösterir;
+  çözme/çizim mantığı bileşende değildir.
+- fps, bit hızı ve kare sayaçları `videoStreamUiPublisher` tarafından sabit
+  aralıkla (varsayılan 1 sn) store'a yazılır; kare başına render tetiklenmez.
+- Panelin sağ üstündeki **Yayını Durdur / Başlat** düğmesi video soketini
+  kapatıp açar; yayın kapalıyken çözücü çalışmaz.
+
+### Sunucu Tarafı Beklentileri
+
+Video worker'ı bu depoda değildir; ayrı bir C# .NET 6 servisi olarak
+geliştirilir. Arayüzün doğru çalışması için sunucunun karşılaması gereken
+davranışlar:
+
+- **Anahtar kare kapısı:** yeni bağlanan istemciye ilk IDR gelene kadar kare
+  gönderilmemelidir; aksi halde çözücü eksik referans kareler yüzünden hata
+  verir.
+- **İstemci başına sınırlı kuyruk:** yavaş bir istemci UDP döngüsünü veya diğer
+  istemcileri yavaşlatmamalı; kuyruğu dolan istemci bir sonraki anahtar kareden
+  yeniden senkronlanmalıdır.
+- **Süreklilik kontrolü:** TS continuity counter atlaması tespit edilirse yarım
+  kalan PES tamponu atılmalıdır.
+- **Bağlantı anında durum:** akış zaten çalışırken bağlanan istemciye bilinen
+  `video-stream-info` ve son `video-stream-status` tekrar gönderilmelidir.
+- IP/port bilgisi koda gömülü olmamalı; `appsettings.json` veya ortam değişkeni
+  ile verilmelidir.
+
 ## Ortam Değişkenleri
 
 `.env` dosyası:
 
 ```env
 VITE_WS_URL=ws://localhost:5000/ws
+VITE_VIDEO_WS_URL=ws://localhost:5001/ws/video
 VITE_TEST_LATITUDE=41.095125
 VITE_TEST_LONGITUDE=28.637975
 VITE_TEST_ROLL=20
@@ -494,13 +624,16 @@ VITE_TELEMETRY_UI_PUBLISH_INTERVAL_MS=100
 VITE_DEBUG_UI_PUBLISH_INTERVAL_MS=1000
 VITE_DEBUG_RAW_MESSAGE_LIMIT=100
 VITE_WS_RECONNECT_DELAY_MS=3000
+VITE_VIDEO_UI_PUBLISH_INTERVAL_MS=1000
 ```
 
-- `VITE_WS_URL`: WebSocket bağlantı adresi.
+- `VITE_WS_URL`: telemetri/komut WebSocket bağlantı adresi.
+- `VITE_VIDEO_WS_URL`: canlı video WebSocket adresi (C# worker'daki ayrı uç).
 - `VITE_TEST_*`: geliştirme ortamında harita ve yönelim göstergelerini test etmek için kullanılır; canlı telemetri değerleri test değerlerinin önüne geçer. (3D roket modeli bu değerleri kullanmaz; yönelimini yalnızca paket IMU verisi + duruş offseti belirler.)
 - `VITE_MODEL_*_OFFSET`: ana sayfadaki 3D roket modelinin duruş offseti (derece) için ilk varsayılanlar. Kullanıcı offseti panelin altındaki formdan canlı değiştirir; girilen değerler `localStorage`'da saklanır ve sonraki açılışlarda env varsayılanlarının önüne geçer.
 - `VITE_*_INTERVAL_MS`: publisher yayın aralıkları.
-- `VITE_WS_RECONNECT_DELAY_MS`: bağlantı koptuğunda yeniden deneme gecikmesi.
+- `VITE_WS_RECONNECT_DELAY_MS`: bağlantı koptuğunda yeniden deneme gecikmesi (telemetri ve video kanalları için ortak).
+- `VITE_VIDEO_UI_PUBLISH_INTERVAL_MS`: video istatistiklerinin (fps, bit hızı, kare sayacı) store'a yazılma aralığı.
 
 Ortam değişkeni değiştirildikten sonra Vite geliştirme sunucusu yeniden başlatılmalıdır.
 
@@ -511,6 +644,11 @@ npm install
 npm run dev     # geliştirme
 npm run build   # üretim derlemesi
 ```
+
+Canlı video için ayrıca C# .NET 6 video worker servisinin çalışıyor olması
+gerekir (ayrı depo). Arayüz o servise `VITE_VIDEO_WS_URL` adresinden bağlanır;
+servis kapalıyken `/video` sayfası "BAĞLANTI YOK" durumunda kalır, diğer
+sayfalar etkilenmez.
 
 ## README Güncelleme Kuralı
 
