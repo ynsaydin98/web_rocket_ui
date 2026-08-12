@@ -1,3 +1,3 @@
 export type MKUYoklamaPaketUiModel = {
-  Yoklama: number;
+  Yoklama: number | undefined;
 };

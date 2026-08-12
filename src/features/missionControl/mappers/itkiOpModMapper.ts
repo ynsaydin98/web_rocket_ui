@@ -4,8 +4,11 @@ import type { OpMod } from "../config/missionControlConfig";
  * MKUItkiDiagnostikPaket.itkiOpDurumlari kodunu 4 değerli görev fazına eşler.
  * PLACEHOLDER eşleme (0/1/2/3) — gerçek MKU protokol belgesi netleşince
  * yalnızca bu fonksiyonun güncellenmesi yeterli.
+ * Alan okunamadıysa (undefined) faz "BEKLEMEDE" kabul edilir.
  */
-export function mapItkiOpDurumlariToOpMod(itkiOpDurumlari: number): OpMod {
+export function mapItkiOpDurumlariToOpMod(
+  itkiOpDurumlari: number | undefined,
+): OpMod {
   switch (itkiOpDurumlari) {
     case 0:
       return "BEKLEMEDE";

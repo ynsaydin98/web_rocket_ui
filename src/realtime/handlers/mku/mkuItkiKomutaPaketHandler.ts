@@ -3,6 +3,7 @@ import type { RealtimeMessageEnvelope } from "../../../contracts/realtimeMessage
 import { mapMKUItkiKomutaPaketToOzet } from "../../../mapper/mku/mkuItkiKomutaPaketMapper";
 import type { MKUItkiKomutaPaket } from "../../../paketler/mku/mkuItkiKomutaPaket";
 import { ingestMKUItkiKomutaPaketForUi } from "../../../storeServices/mku/mkuItkiKomutaPaketUiPublisher";
+import { isSayisalAlan } from "../../../shared/utils/sayisalDogrulama";
 import { registerRealtimeHandler } from "../../realtimeDispatcher";
 
 export function registerMKUItkiKomutaPaketHandler() {
@@ -33,37 +34,37 @@ function paketCheck(payload: unknown): payload is MKUItkiKomutaPaket {
 
   const value = payload as Partial<MKUItkiKomutaPaket>;
   return (
-    typeof value.geriSayim_sn === "number" &&
-    typeof value.anahtarKontrolu === "number" &&
-    typeof value.seciliValf_0 === "number" &&
-    typeof value.seciliIslem_0 === "number" &&
-    typeof value.islemSuresi_0 === "number" &&
-    typeof value.seciliValf_1 === "number" &&
-    typeof value.seciliIslem_1 === "number" &&
-    typeof value.islemSuresi_1 === "number" &&
-    typeof value.seciliValf_2 === "number" &&
-    typeof value.seciliIslem_2 === "number" &&
-    typeof value.islemSuresi_2 === "number" &&
-    typeof value.seciliValf_3 === "number" &&
-    typeof value.seciliIslem_3 === "number" &&
-    typeof value.islemSuresi_3 === "number" &&
-    typeof value.seciliValf_4 === "number" &&
-    typeof value.seciliIslem_4 === "number" &&
-    typeof value.islemSuresi_4 === "number" &&
-    typeof value.seciliValf_5 === "number" &&
-    typeof value.seciliIslem_5 === "number" &&
-    typeof value.islemSuresi_5 === "number" &&
-    typeof value.seciliValf_6 === "number" &&
-    typeof value.seciliIslem_6 === "number" &&
-    typeof value.islemSuresi_6 === "number" &&
-    typeof value.seciliValf_7 === "number" &&
-    typeof value.seciliIslem_7 === "number" &&
-    typeof value.islemSuresi_7 === "number" &&
-    typeof value.seciliValf_8 === "number" &&
-    typeof value.seciliIslem_8 === "number" &&
-    typeof value.islemSuresi_8 === "number" &&
-    typeof value.seciliValf_9 === "number" &&
-    typeof value.seciliIslem_9 === "number" &&
-    typeof value.islemSuresi_9 === "number"
+    isSayisalAlan(value.geriSayim_sn) &&
+    isSayisalAlan(value.anahtarKontrolu) &&
+    isSayisalAlan(value.seciliValf_0) &&
+    isSayisalAlan(value.seciliIslem_0) &&
+    isSayisalAlan(value.islemSuresi_0) &&
+    isSayisalAlan(value.seciliValf_1) &&
+    isSayisalAlan(value.seciliIslem_1) &&
+    isSayisalAlan(value.islemSuresi_1) &&
+    isSayisalAlan(value.seciliValf_2) &&
+    isSayisalAlan(value.seciliIslem_2) &&
+    isSayisalAlan(value.islemSuresi_2) &&
+    isSayisalAlan(value.seciliValf_3) &&
+    isSayisalAlan(value.seciliIslem_3) &&
+    isSayisalAlan(value.islemSuresi_3) &&
+    isSayisalAlan(value.seciliValf_4) &&
+    isSayisalAlan(value.seciliIslem_4) &&
+    isSayisalAlan(value.islemSuresi_4) &&
+    isSayisalAlan(value.seciliValf_5) &&
+    isSayisalAlan(value.seciliIslem_5) &&
+    isSayisalAlan(value.islemSuresi_5) &&
+    isSayisalAlan(value.seciliValf_6) &&
+    isSayisalAlan(value.seciliIslem_6) &&
+    isSayisalAlan(value.islemSuresi_6) &&
+    isSayisalAlan(value.seciliValf_7) &&
+    isSayisalAlan(value.seciliIslem_7) &&
+    isSayisalAlan(value.islemSuresi_7) &&
+    isSayisalAlan(value.seciliValf_8) &&
+    isSayisalAlan(value.seciliIslem_8) &&
+    isSayisalAlan(value.islemSuresi_8) &&
+    isSayisalAlan(value.seciliValf_9) &&
+    isSayisalAlan(value.seciliIslem_9) &&
+    isSayisalAlan(value.islemSuresi_9)
   );
 }

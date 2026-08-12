@@ -42,14 +42,21 @@ function bosAdimlar(): MKUSekansAdim[] {
   }));
 }
 
+// Okunamayan (undefined) alanlar tabloda seçimsiz/0 satır olarak gösterilir;
+// aksi halde GONDER paketine undefined sızardı.
 function adimlarFromItkiKomutaPaket(
   model: MKUItkiKomutaPaketUiModel,
 ): MKUSekansAdim[] {
+  const alanOku = (key: string) =>
+    model[key as keyof MKUItkiKomutaPaketUiModel];
+
   return Array.from({ length: ADIM_SAYISI }, (_, i) => ({
     islemNo: i + 1,
-    valfSecimi: model[`seciliValf_${i}` as keyof MKUItkiKomutaPaketUiModel] as SekansValfSecimi,
-    komutSecimi: model[`seciliIslem_${i}` as keyof MKUItkiKomutaPaketUiModel] as SekansKomutSecimi,
-    sure_ms: model[`islemSuresi_${i}` as keyof MKUItkiKomutaPaketUiModel] as number,
+    valfSecimi: (alanOku(`seciliValf_${i}`) ??
+      SekansValfSecimleri.SecimYok) as SekansValfSecimi,
+    komutSecimi: (alanOku(`seciliIslem_${i}`) ??
+      SekansKomutSecimleri.SecimYok) as SekansKomutSecimi,
+    sure_ms: alanOku(`islemSuresi_${i}`) ?? 0,
   }));
 }
 
@@ -65,7 +72,7 @@ export function SekansSecimPanel() {
   useEffect(() => {
     if (!itkiKomutaOzet) return;
     setAdimlar(adimlarFromItkiKomutaPaket(itkiKomutaOzet));
-    setGecenSure(itkiKomutaOzet.geriSayim_sn);
+    setGecenSure(itkiKomutaOzet.geriSayim_sn ?? 0);
   }, [itkiKomutaLastUpdateId, itkiKomutaOzet]);
 
   const adimGuncelle = (index: number, degisiklik: Partial<MKUSekansAdim>) => {

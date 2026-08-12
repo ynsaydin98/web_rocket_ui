@@ -1,7 +1,7 @@
 export type MKUVersiyonPaketUiModel = {
-  major: number;
-  minor: number;
-  build: number;
-  revision: number;
+  major: number | undefined;
+  minor: number | undefined;
+  build: number | undefined;
+  revision: number | undefined;
   versiyonText: string;
 };

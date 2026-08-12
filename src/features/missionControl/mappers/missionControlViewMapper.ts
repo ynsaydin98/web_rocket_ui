@@ -16,6 +16,7 @@ import {
   type OpMod,
   type SensorId,
 } from "../config/missionControlConfig";
+import { isSayisal } from "../../../shared/utils/sayisalDogrulama";
 import type { MKUItkiDiagnostikPaketUiModel } from "../../../ui-models/mku/mkuItkiDiagnostikPaketUiModel";
 import type { IgniterState, MissionControlState, ValveState } from "../store/missionControlStore";
 import { mapItkiOpDurumlariToOpMod } from "./itkiOpModMapper";
@@ -133,12 +134,13 @@ const SENSOR_ALANLARI: Record<SensorId, keyof MKUItkiDiagnostikPaketUiModel> = {
   "TC-02": "TC2",
 };
 
-/** Paket henüz gelmediyse rozetler eksen alt değerini gösterir. */
+/** Paket gelmediyse veya alan okunamadıysa rozetler eksen alt değerini gösterir. */
 function sensorDeger(
   id: SensorId,
   ozet: MKUItkiDiagnostikPaketUiModel | undefined,
 ): number {
-  return ozet ? ozet[SENSOR_ALANLARI[id]] : SENSORS[id].axis[0];
+  const deger = ozet?.[SENSOR_ALANLARI[id]];
+  return isSayisal(deger) ? deger : SENSORS[id].axis[0];
 }
 
 function buildLinePoints(degerler: number[], axisMax: number): string {
@@ -174,10 +176,12 @@ export function buildMissionControlView(
   ozet: MKUItkiDiagnostikPaketUiModel | undefined,
   local: MissionControlState,
 ): MissionControlView {
-  const opMod = ozet ? mapItkiOpDurumlariToOpMod(ozet.itkiOpDurumlari) : "BEKLEMEDE";
+  const opMod = mapItkiOpDurumlariToOpMod(ozet?.itkiOpDurumlari);
 
   // Acil durdur durumu gerçek telemetrideki acilDurdurDurum alanından gelir.
-  const aborted = ozet !== undefined && ozet.acilDurdurDurum !== 0;
+  // Alan okunamadıysa (null/NaN) durum bilinmiyor demektir; paket hiç gelmemiş
+  // gibi davranılır ve ABORT'a düşülmez.
+  const aborted = isSayisal(ozet?.acilDurdurDurum) && ozet.acilDurdurDurum !== 0;
   const status: MissionStatus = aborted ? "ABORT" : mapOpModToStatus(opMod);
   const statusColor = STATUS_COLORS[status];
 

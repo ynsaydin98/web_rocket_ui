@@ -62,6 +62,10 @@ function diziAlanlari(
   }));
 }
 
-function cloneEeprom9(value: readonly number[]): Eeprom9 {
-  return [...value] as Eeprom9;
+/**
+ * Giden GONDER paketi her zaman sayısal olmalı. Okunamamış (undefined) alanlar
+ * tabloda 0 gösterildiği için gönderilirken de 0 olarak yazılır.
+ */
+function cloneEeprom9(value: readonly (number | undefined)[]): Eeprom9 {
+  return value.map((deger) => deger ?? 0) as Eeprom9;
 }

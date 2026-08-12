@@ -142,6 +142,41 @@ export const MessageTypes = {
 } as const;
 ```
 
+### Sayısal Alanlarda `null` / `NaN`
+
+Servis, sözleşmede sayısal olan bir alanı sensör okunamadığında ya da hesap
+tanımsız kaldığında `null` veya `NaN` olarak gönderebiliyor. Bu yüzden gelen
+paket tiplerinde sayısal alanlar `SayisalAlan` (`number | null`) olarak
+tanımlıdır ve doğrulama iki katmana ayrılmıştır:
+
+| Gelen değer          | Doğrulama       | UI modeldeki karşılığı |
+| -------------------- | --------------- | ---------------------- |
+| sonlu sayı           | geçerli         | değerin kendisi        |
+| `null` / `NaN`       | geçerli         | `undefined` (veri yok) |
+| `Infinity`           | geçerli         | `undefined` (veri yok) |
+| alan hiç yok, string | **geçersiz**    | paket düşürülür        |
+
+Kural: **tek bir alanın okunamaması paketin tamamını düşürmez.** Sadece o alan
+"veri yok" olur, paketin geri kalanı UI'a akmaya devam eder. Alanın hiç
+gelmemesi veya sayısal olmayan bir tip gelmesi ise sözleşme uyuşmazlığı
+sayılır; paket `console.warn` ile loglanır ve düşürülür.
+
+Ortak yardımcılar `src/shared/utils/sayisalDogrulama.ts` içindedir:
+
+```ts
+isSayisalAlan(deger); // handler doğrulaması: null/NaN kabul, eksik alan ret
+isSayisalAlanDizisi(deger, uzunluk); // sabit uzunluklu sayısal dizi alanı
+isSayisal(deger); // kullanılabilir (sonlu) değer mi?
+sayisalDeger(deger); // mapper: okunamayan değer -> undefined
+sayisalDegerDizisi(degerler); // mapper: dizi alanı -> (number | undefined)[]
+```
+
+Bu nedenle UI modellerinde sayısal alanlar `number | undefined` tipindedir.
+Ekrandaki karşılığı: `formatDeger` okunamayan değeri `0` gösterir, göstergeler
+sayfasındaki kartlar ve grafikler ise değeri atlayıp `--` gösterir. Giden komut
+paketleri (ör. EEPROM `Gonder`, sekans gönderimi) her zaman sayısal kalır;
+okunamayan alanlar tabloda görüntülenen `0` değeriyle gönderilir.
+
 ## Giden Komut Formatı
 
 Web UI tarafından servise gönderilecek komut formatı:
@@ -302,7 +337,7 @@ src/
 
 ### `src/paketler`
 
-Servisten WebSocket üzerinden gelen ham paket modellerinin TypeScript karşılıkları. Alan adları ve tipleri protokol belgesiyle birebir aynıdır. Ünite bazlı klasörlenir (`mku/`, ileride diğer üniteler).
+Servisten WebSocket üzerinden gelen ham paket modellerinin TypeScript karşılıkları. Alan adları ve tipleri protokol belgesiyle birebir aynıdır. Ünite bazlı klasörlenir (`mku/`, ileride diğer üniteler). Sayısal alanlar `SayisalAlan` (`number | null`) tipindedir; okunamayan değer `null`/`NaN` olarak gelebilir (bkz. [Sayısal Alanlarda `null` / `NaN`](#sayısal-alanlarda-null--nan)).
 
 ### `src/ui-models`
 
@@ -310,7 +345,7 @@ Paketlerin arayüzde kullanılacak sadeleştirilmiş karşılıkları. Servis ta
 
 ### `src/mapper`
 
-Ham paket modelini UI modeline dönüştüren saf fonksiyonlar.
+Ham paket modelini UI modeline dönüştüren saf fonksiyonlar. Sayısal alanlar `sayisalDeger` ile normalize edilir: okunamayan (`null`/`NaN`/`Infinity`) değerler UI modelde `undefined` olur.
 
 ### `src/store`
 
@@ -326,7 +361,7 @@ Paket/model bazlı komut sabitleri (`xKomut.ts`) ve `CommandEnvelope` üreten fa
 
 ### `src/realtime`
 
-WebSocket bağlantısı, otomatik yeniden bağlanma, `messageType` -> handler dispatch yapısı ve paket handler'ları. Handler'lar payload'u type-guard ile doğrular; geçersiz payload konsola uyarı yazar ve akışı bozmaz. `connectionStore` ayrıca üst bardaki veri LED'ini süren `dataLive` bayrağını yönetir (2 sn veri gelmezse söner).
+WebSocket bağlantısı, otomatik yeniden bağlanma, `messageType` -> handler dispatch yapısı ve paket handler'ları. Handler'lar payload'u type-guard ile doğrular; geçersiz payload konsola uyarı yazar ve akışı bozmaz. Sayısal alan doğrulaması `isSayisalAlan` üzerinden yapılır: `null`/`NaN` gelen alan paketi düşürmez, yalnızca o alan "veri yok" sayılır. `connectionStore` ayrıca üst bardaki veri LED'ini süren `dataLive` bayrağını yönetir (2 sn veri gelmezse söner).
 
 ### `src/features/video`
 

@@ -3,6 +3,7 @@ import type { RealtimeMessageEnvelope } from "../../../contracts/realtimeMessage
 import { mapMKUVersiyonPaketToOzet } from "../../../mapper/mku/mkuVersiyonPaketMapper";
 import type { MKUVersiyonPaket } from "../../../paketler/mku/mkuVersiyonPaket";
 import { ingestMKUVersiyonPaketForUi } from "../../../storeServices/mku/mkuVersiyonPaketUiiPublisher";
+import { isSayisalAlan } from "../../../shared/utils/sayisalDogrulama";
 import { registerRealtimeHandler } from "../../realtimeDispatcher";
 
 export function registerMKUVersiyonPaketHandler() {
@@ -33,9 +34,9 @@ function paketCheck(payload: unknown): payload is MKUVersiyonPaket {
 
   const value = payload as Partial<MKUVersiyonPaket>;
   return (
-    typeof value.major === "number" &&
-    typeof value.minor === "number" &&
-    typeof value.build === "number" &&
-    typeof value.revision === "number"
+    isSayisalAlan(value.major) &&
+    isSayisalAlan(value.minor) &&
+    isSayisalAlan(value.build) &&
+    isSayisalAlan(value.revision)
   );
 }

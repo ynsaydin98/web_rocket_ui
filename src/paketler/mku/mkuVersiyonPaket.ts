@@ -1,6 +1,8 @@
+import type { SayisalAlan } from "../../shared/utils/sayisalDogrulama";
+
 export type MKUVersiyonPaket = {
-  major: number;
-  minor: number;
-  build: number;
-  revision: number;
+  major: SayisalAlan;
+  minor: SayisalAlan;
+  build: SayisalAlan;
+  revision: SayisalAlan;
 };

@@ -3,6 +3,7 @@ import type { RealtimeMessageEnvelope } from "../../../contracts/realtimeMessage
 import { mapMKUItkiDiagnostikPaketToOzet } from "../../../mapper/mku/mkuItkiDiagnostikPaketMapper";
 import type { MKUItkiDiagnostikPaket } from "../../../paketler/mku/mkuItkiDiagnostikPaket";
 import { ingestMKUItkiDiagnostikPaketForUi } from "../../../storeServices/mku/mkuItkiDiagnostikPaketUiPublisher";
+import { isSayisalAlan } from "../../../shared/utils/sayisalDogrulama";
 import { registerRealtimeHandler } from "../../realtimeDispatcher";
 
 export function registerMKUItkiDiagnostikPaketHandler() {
@@ -33,42 +34,42 @@ function paketCheck(payload: unknown): payload is MKUItkiDiagnostikPaket {
 
   const value = payload as Partial<MKUItkiDiagnostikPaket>;
   return (
-    typeof value.itkiOpDurumlari === "number" &&
-    typeof value.opGecenSure_ms === "number" &&
-    typeof value.itkiBaslatmaGeriSayim_sn === "number" &&
-    typeof value.acilDurdurDurum === "number" &&
-    typeof value.acilDurdurBasla === "number" &&
-    typeof value.komutItkiSuresi_ms === "number" &&
-    typeof value.tahliyeGecenSure === "number" &&
-    typeof value.itkiGecenSure_ms === "number" &&
-    typeof value.kalanItkiSuresi_ms === "number" &&
-    typeof value.kalanTahliyeSuresi_ms === "number" &&
-    typeof value.kalanAcilDurdurSuresi_ms === "number" &&
-    typeof value.acilDurdurGecenSure_ms === "number" &&
-    typeof value.sistemSaati_ms === "number" &&
-    typeof value.sonIslemSuresi_ms === "number" &&
-    typeof value.islemDurumlari === "number" &&
-    typeof value.valfDurum_Igniter1 === "number" &&
-    typeof value.valfDurum_Igniter2 === "number" &&
-    typeof value.valfDurum_OksitleyiciValf === "number" &&
-    typeof value.valfDurum_OksitleyiciYedekValf === "number" &&
-    typeof value.itkiSistemDurum === "number" &&
-    typeof value.itkiOperasyonCevrim === "number" &&
-    typeof value.itkiHazirlikCevrim === "number" &&
-    typeof value.itkiTahliyeDurum === "number" &&
-    typeof value.aphisDurum === "number" &&
-    typeof value.rksDurum === "number" &&
-    typeof value.valfKomutMod === "number" &&
-    typeof value.seciliAtesleyici === "number" &&
-    typeof value.imu_pitch === "number" &&
-    typeof value.imu_roll === "number" &&
-    typeof value.imu_yaw === "number" &&
-    typeof value.PT1 === "number" &&
-    typeof value.PT2 === "number" &&
-    typeof value.PT3 === "number" &&
-    typeof value.PT4 === "number" &&
-    typeof value.PT5 === "number" &&
-    typeof value.TC1 === "number" &&
-    typeof value.TC2 === "number"
+    isSayisalAlan(value.itkiOpDurumlari) &&
+    isSayisalAlan(value.opGecenSure_ms) &&
+    isSayisalAlan(value.itkiBaslatmaGeriSayim_sn) &&
+    isSayisalAlan(value.acilDurdurDurum) &&
+    isSayisalAlan(value.acilDurdurBasla) &&
+    isSayisalAlan(value.komutItkiSuresi_ms) &&
+    isSayisalAlan(value.tahliyeGecenSure) &&
+    isSayisalAlan(value.itkiGecenSure_ms) &&
+    isSayisalAlan(value.kalanItkiSuresi_ms) &&
+    isSayisalAlan(value.kalanTahliyeSuresi_ms) &&
+    isSayisalAlan(value.kalanAcilDurdurSuresi_ms) &&
+    isSayisalAlan(value.acilDurdurGecenSure_ms) &&
+    isSayisalAlan(value.sistemSaati_ms) &&
+    isSayisalAlan(value.sonIslemSuresi_ms) &&
+    isSayisalAlan(value.islemDurumlari) &&
+    isSayisalAlan(value.valfDurum_Igniter1) &&
+    isSayisalAlan(value.valfDurum_Igniter2) &&
+    isSayisalAlan(value.valfDurum_OksitleyiciValf) &&
+    isSayisalAlan(value.valfDurum_OksitleyiciYedekValf) &&
+    isSayisalAlan(value.itkiSistemDurum) &&
+    isSayisalAlan(value.itkiOperasyonCevrim) &&
+    isSayisalAlan(value.itkiHazirlikCevrim) &&
+    isSayisalAlan(value.itkiTahliyeDurum) &&
+    isSayisalAlan(value.aphisDurum) &&
+    isSayisalAlan(value.rksDurum) &&
+    isSayisalAlan(value.valfKomutMod) &&
+    isSayisalAlan(value.seciliAtesleyici) &&
+    isSayisalAlan(value.imu_pitch) &&
+    isSayisalAlan(value.imu_roll) &&
+    isSayisalAlan(value.imu_yaw) &&
+    isSayisalAlan(value.PT1) &&
+    isSayisalAlan(value.PT2) &&
+    isSayisalAlan(value.PT3) &&
+    isSayisalAlan(value.PT4) &&
+    isSayisalAlan(value.PT5) &&
+    isSayisalAlan(value.TC1) &&
+    isSayisalAlan(value.TC2)
   );
 }

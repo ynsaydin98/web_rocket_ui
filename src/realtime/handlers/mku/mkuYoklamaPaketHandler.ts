@@ -3,6 +3,7 @@ import type { RealtimeMessageEnvelope } from "../../../contracts/realtimeMessage
 import { mapMKUYoklamaPaketToOzet } from "../../../mapper/mku/mkuYoklamaPaketMapper";
 import type { MKUYoklamaPaket } from "../../../paketler/mku/mkuYoklamaPaket";
 import { ingestMKUYoklamaPaketForUi } from "../../../storeServices/mku/mkuYoklamaPaketUiPublisher";
+import { isSayisalAlan } from "../../../shared/utils/sayisalDogrulama";
 import { registerRealtimeHandler } from "../../realtimeDispatcher";
 
 export function registerMKUYoklamaPaketHandler() {
@@ -26,5 +27,5 @@ function paketCheck(payload: unknown): payload is MKUYoklamaPaket {
   }
 
   const value = payload as Partial<MKUYoklamaPaket>;
-  return typeof value.Yoklama === "number";
+  return isSayisalAlan(value.Yoklama);
 }

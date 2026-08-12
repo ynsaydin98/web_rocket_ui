@@ -2,11 +2,14 @@ import { MessageTypes } from "../../../contracts/messageTypes";
 import type { RealtimeMessageEnvelope } from "../../../contracts/realtimeMessageEnvelope";
 import { mapMKUEepromPaketToOzet } from "../../../mapper/mku/mkuEepromPaketMapper";
 import type {
-  Eeprom9,
+  Eeprom9Gelen,
   MKUEepromPaket,
 } from "../../../paketler/mku/mkuEepromPaket";
 import { ingestMKUEepromPaketForUi } from "../../../storeServices/mku/mkuEepromPaketUiPublisher";
+import { isSayisalAlanDizisi } from "../../../shared/utils/sayisalDogrulama";
 import { registerRealtimeHandler } from "../../realtimeDispatcher";
+
+const EEPROM_DIZI_UZUNLUGU = 9;
 
 export function registerMKUEepromPaketHandler() {
   registerRealtimeHandler(MessageTypes.MKUEepromPaket, handleMKUEepromPaket);
@@ -40,10 +43,6 @@ function paketCheck(payload: unknown): payload is MKUEepromPaket {
   );
 }
 
-function isEeprom9(value: unknown): value is Eeprom9 {
-  return (
-    Array.isArray(value) &&
-    value.length === 9 &&
-    value.every((item) => typeof item === "number")
-  );
+function isEeprom9(value: unknown): value is Eeprom9Gelen {
+  return isSayisalAlanDizisi(value, EEPROM_DIZI_UZUNLUGU);
 }

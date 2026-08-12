@@ -28,7 +28,11 @@ function parseModel(source) {
   if (!bodyMatch) return undefined;
 
   const fields = [];
-  const fieldRegex = /^\s*([A-Za-z_][A-Za-z0-9_]*)\??:\s*number\s*;/gm;
+  // "deger: number;" ve "deger: number | undefined;" alanlari grafige acilir.
+  // Sayisal alanlar servis tarafinda okunamadiginda undefined olabildigi icin
+  // ikinci bicim de eslesmek zorunda (bkz. src/shared/utils/sayisalDogrulama.ts).
+  const fieldRegex =
+    /^\s*([A-Za-z_][A-Za-z0-9_]*)\??:\s*number(?:\s*\|\s*undefined)?\s*;/gm;
   let match;
   while ((match = fieldRegex.exec(bodyMatch[2])) !== null) {
     fields.push(match[1]);

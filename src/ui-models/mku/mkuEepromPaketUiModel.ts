@@ -1,13 +1,14 @@
+/** UI tarafındaki EEPROM dizisi; okunamayan elemanlar undefined ("veri yok") olur. */
 export type Eeprom9Ui = [
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
+  number | undefined,
+  number | undefined,
+  number | undefined,
+  number | undefined,
+  number | undefined,
+  number | undefined,
+  number | undefined,
+  number | undefined,
+  number | undefined,
 ];
 
 export type MKUEepromPaketUiModel = {
