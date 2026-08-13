@@ -3,7 +3,10 @@ import type { RealtimeMessageEnvelope } from "../../../contracts/realtimeMessage
 import { mapMKUItkiDiagnostikPaketToOzet } from "../../../mapper/mku/mkuItkiDiagnostikPaketMapper";
 import type { MKUItkiDiagnostikPaket } from "../../../paketler/mku/mkuItkiDiagnostikPaket";
 import { ingestMKUItkiDiagnostikPaketForUi } from "../../../storeServices/mku/mkuItkiDiagnostikPaketUiPublisher";
-import { isSayisalAlan } from "../../../shared/utils/sayisalDogrulama";
+import {
+  isOpsiyonelSayisalAlan,
+  isSayisalAlan,
+} from "../../../shared/utils/sayisalDogrulama";
 import { registerRealtimeHandler } from "../../realtimeDispatcher";
 
 export function registerMKUItkiDiagnostikPaketHandler() {
@@ -64,6 +67,7 @@ function paketCheck(payload: unknown): payload is MKUItkiDiagnostikPaket {
     isSayisalAlan(value.imu_pitch) &&
     isSayisalAlan(value.imu_roll) &&
     isSayisalAlan(value.imu_yaw) &&
+    isOpsiyonelSayisalAlan(value.batarya_yuzde) &&
     isSayisalAlan(value.PT1) &&
     isSayisalAlan(value.PT2) &&
     isSayisalAlan(value.PT3) &&

@@ -142,6 +142,20 @@ export const MessageTypes = {
 } as const;
 ```
 
+### Yeni Alan: `batarya_yuzde`
+
+`MKUItkiDiagnostikPaket` içine batarya doluluk yüzdesi (0-100) eklendi:
+
+```json
+{ "messageType": "MKUItkiDiagnostikPaket", "payload": { "batarya_yuzde": 87.4 } }
+```
+
+Alan **opsiyoneldir**: servis tarafı göndermeye başlayana kadar paketlerin
+düşmemesi için doğrulamada `isOpsiyonelSayisalAlan` kullanılır. Alan yayına
+girdiğinde paket tipindeki `?` kaldırılıp doğrulama `isSayisalAlan`'a çevrilerek
+zorunlu hale getirilebilir. Diğer sayısal alanlar gibi `null`/`NaN` gelebilir;
+bu durumda üst bardaki gösterge `--%` ve gri gösterir.
+
 ### Sayısal Alanlarda `null` / `NaN`
 
 Servis, sözleşmede sayısal olan bir alanı sensör okunamadığında ya da hesap
@@ -451,6 +465,17 @@ sayımı, itki süreleri, operasyon geçen süre, valf durumları).
 - **Geri sayım kutusu**: `MKUItkiDiagnostikPaket.itkiBaslatmaGeriSayim_sn` negatifken kırmızı `T-`, sıfır veya pozitifken yeşil `T+` olarak gösterilir. Veri yokken `T- --:--`.
 - **Operasyon modu kutusu**: `itkiOpDurumlari` değerinin `OpMod` karşılığını gösterir (BEKLEMEDE / GERİ SAYIM / ATEŞLEME / TAMAMLANDI). Veri yokken `MOD BEKLENİYOR`.
 - **Saatler**: Sistem Saati ve GNSS Saati'nin yanında yerel bilgisayar saatini saniyede bir güncelleyen **Lokal Saat** gösterilir. Hız ve irtifa alanları üst bardan kaldırılmıştır.
+- **Batarya göstergesi**: `MKUItkiDiagnostikPaket.batarya_yuzde` değerini batarya çizimi + yüzde olarak gösterir. Doluluk seviyesine göre renk değiştirir:
+
+  | Yüzde     | Renk    | Durum sınıfı        |
+  | --------- | ------- | ------------------- |
+  | `>= 80`   | yeşil   | `batarya--iyi`      |
+  | `50 - 79` | turuncu | `batarya--uyari`    |
+  | `< 50`    | kırmızı | `batarya--kritik`   |
+  | veri yok  | gri     | `batarya--veri-yok` |
+
+  Eşikler `src/shared/utils/bataryaDurum.ts` içindeki `BATARYA_LIMITLERI` sabitindedir; değiştirmek için tek yeri güncellemek yeterlidir. Bileşen (`src/shared/components/BataryaGostergesi.tsx`) salt görseldir, değeri prop olarak alır ve `limit` prop'uyla farklı eşiklerle de kullanılabilir. Aralık dışı değerler (0 altı / 100 üstü) çizimde sınırlandırılır, `null`/`NaN` geldiğinde gösterge `--%` ve gri olur.
+
 - **Veri LED'i**: WebSocket'ten herhangi bir mesaj aktığı sürece yeşil yanar; 2 saniye boyunca hiç mesaj gelmezse kırmızıya döner (`connectionStore.dataLive`).
 
 ## 3D Görünüm Paneli (Ana Sayfa)

@@ -19,6 +19,18 @@ export function isSayisalAlan(deger: unknown): deger is SayisalAlan {
   return deger === null || typeof deger === "number";
 }
 
+/**
+ * Opsiyonel sayısal alan doğrulaması: `null`/`NaN`'a ek olarak alanın hiç
+ * gelmemesi de kabul edilir. Servis tarafına yeni eklenen ve henüz her paketle
+ * gönderilmeyen alanlar için kullanılır; alan yayına girene kadar paketlerin
+ * düşmesini engeller.
+ */
+export function isOpsiyonelSayisalAlan(
+  deger: unknown,
+): deger is SayisalAlan | undefined {
+  return deger === undefined || isSayisalAlan(deger);
+}
+
 /** Sabit uzunluklu sayısal dizi alanı; elemanlar null/NaN olabilir. */
 export function isSayisalAlanDizisi(deger: unknown, uzunluk: number): boolean {
   return (

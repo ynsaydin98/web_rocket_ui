@@ -32,6 +32,9 @@ export type MKUItkiDiagnostikPaketUiModel = {
   imu_roll: number | undefined;
   imu_yaw: number | undefined;
 
+  /** Batarya doluluk yüzdesi (0-100); alan gelmediyse undefined. */
+  batarya_yuzde: number | undefined;
+
   PT1: number | undefined;
   PT2: number | undefined;
   PT3: number | undefined;

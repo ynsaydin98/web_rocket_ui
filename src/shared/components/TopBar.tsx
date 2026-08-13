@@ -6,6 +6,7 @@ import {
 } from "../../features/missionControl/mappers/itkiOpModMapper";
 import { useConnectionStore } from "../../realtime/connectionStore";
 import { useMKUItkiDiagnostikPaketStore } from "../../store/mku/mkuItkiDiagnostikPaketStore";
+import { BataryaGostergesi } from "./BataryaGostergesi";
 
 function formatLokalSaat() {
   return new Date().toLocaleTimeString("tr-TR", { hour12: false });
@@ -78,6 +79,11 @@ export function TopBar() {
           <div>
             <span>Lokal Saat</span>
             <strong>{lokalSaat}</strong>
+          </div>
+
+          <div className="quick-telemetry__batarya">
+            <span>Batarya</span>
+            <BataryaGostergesi yuzde={itkiOzet?.batarya_yuzde} />
           </div>
 
           <div

@@ -39,6 +39,8 @@ export function mapMKUItkiDiagnostikPaketToOzet(
     imu_roll: sayisalDeger(mesaj.imu_roll),
     imu_yaw: sayisalDeger(mesaj.imu_yaw),
 
+    batarya_yuzde: sayisalDeger(mesaj.batarya_yuzde),
+
     PT1: sayisalDeger(mesaj.PT1),
     PT2: sayisalDeger(mesaj.PT2),
     PT3: sayisalDeger(mesaj.PT3),

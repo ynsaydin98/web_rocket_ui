@@ -135,6 +135,10 @@ export const GENERATED_GRAFIK_ALANLARI = [
         "label": "imu_yaw"
       },
       {
+        "key": "batarya_yuzde",
+        "label": "batarya_yuzde"
+      },
+      {
         "key": "PT1",
         "label": "PT1"
       },

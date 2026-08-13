@@ -34,6 +34,14 @@ export type MKUItkiDiagnostikPaket = {
   imu_roll: SayisalAlan;
   imu_yaw: SayisalAlan;
 
+  /**
+   * Batarya doluluk yüzdesi (0-100). Servis tarafı bu alanı göndermeye
+   * başlayana kadar paketin düşmemesi için opsiyonel; alan yayına girdiğinde
+   * buradaki `?` ve handler'daki `isOpsiyonelSayisalAlan` zorunlu hale
+   * çevrilebilir.
+   */
+  batarya_yuzde?: SayisalAlan;
+
   PT1: SayisalAlan;
   PT2: SayisalAlan;
   PT3: SayisalAlan;
