@@ -15,13 +15,19 @@ type Props = {
   etiket?: string;
 };
 
-/** Çizim geometrisi (viewBox birimi). Dolum alanı gövdenin içinde kalır. */
+/**
+ * Çizim geometrisi (viewBox birimi). Dolum alanı gövdenin içinde kalır ve
+ * genişliği en uzun metnin ("100.0%") rahatça sığacağı şekilde seçilmiştir.
+ */
 const DOLUM_X = 4;
 const DOLUM_Y = 4;
-const DOLUM_MAKS_GENISLIK = 50;
+const DOLUM_MAKS_GENISLIK = 58;
 const DOLUM_YUKSEKLIK = 22;
 const METIN_MERKEZ_X = DOLUM_X + DOLUM_MAKS_GENISLIK / 2;
 const METIN_MERKEZ_Y = DOLUM_Y + DOLUM_YUKSEKLIK / 2;
+
+/** Yüzde metnindeki ondalık hane sayısı. Değer yuvarlanmaz, kırpılarak gösterilir. */
+const YUZDE_HANE = 1;
 
 /**
  * Doluluk seviyesine göre renk değiştiren batarya göstergesi. Yüzde metni
@@ -51,7 +57,7 @@ export function BataryaGostergesi({
   // dolum çubuğu taşmaz. Renk hesabı ham değer üzerinden yapılır.
   const doluluk = gecerliDeger ? Math.min(100, Math.max(0, yuzde)) : 0;
   const dolumGenisligi = (DOLUM_MAKS_GENISLIK * doluluk) / 100;
-  const yuzdeText = gecerliDeger ? `${Math.round(yuzde)}%` : "--%";
+  const yuzdeText = gecerliDeger ? `${yuzde.toFixed(YUZDE_HANE)}%` : "--%";
   const baslik = gecerliDeger
     ? `${etiket}: ${yuzdeText}`
     : `${etiket}: veri yok`;
@@ -67,7 +73,7 @@ export function BataryaGostergesi({
       aria-valuetext={yuzdeText}
       title={baslik}
     >
-      <svg className="batarya__cizim" viewBox="0 0 64 30" aria-hidden="true">
+      <svg className="batarya__cizim" viewBox="0 0 72 30" aria-hidden="true">
         <defs>
           <clipPath id={doluKirpmaId}>
             <rect
@@ -91,11 +97,11 @@ export function BataryaGostergesi({
           className="batarya__govde"
           x="1"
           y="1"
-          width="56"
+          width="64"
           height="28"
           rx="5"
         />
-        <rect className="batarya__uc" x="58" y="9" width="5" height="12" rx="2" />
+        <rect className="batarya__uc" x="66" y="9" width="5" height="12" rx="2" />
         <rect
           className="batarya__dolum"
           x={DOLUM_X}

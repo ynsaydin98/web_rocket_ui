@@ -474,6 +474,8 @@ sayımı, itki süreleri, operasyon geçen süre, valf durumları).
   | `< 50`    | kırmızı | `batarya--kritik`   |
   | veri yok  | gri     | `batarya--veri-yok` |
 
+  Yüzde **yuvarlanmaz**, virgülden sonra bir hane ile gösterilir (`95.3%`, `49.8%`, `100.0%`). Hane sayısı bileşendeki `YUZDE_HANE` sabitiyle değiştirilebilir; çizim genişliği en uzun metin olan `100.0%`'a göre seçilmiştir.
+
   Eşikler `src/shared/utils/bataryaDurum.ts` içindeki `BATARYA_LIMITLERI` sabitindedir; değiştirmek için tek yeri güncellemek yeterlidir. Bileşen (`src/shared/components/BataryaGostergesi.tsx`) salt görseldir, değeri prop olarak alır ve `limit` prop'uyla farklı eşiklerle de kullanılabilir. Aralık dışı değerler (0 altı / 100 üstü) çizimde sınırlandırılır, `null`/`NaN` geldiğinde gösterge `--%` ve gri olur.
 
   Yüzde metni okunaklılık için iki kez çizilir ve `clipPath` ile ikiye ayrılır: dolum çubuğunun üzerine denk gelen kısım koyu (`--bg-main`), boş alana denk gelen kısım durum renginde gösterilir. Böylece metin hem %5'te hem %100'de kontrastını korur. `clipPath` kimlikleri `useId` ile üretilir, aynı sayfada birden fazla batarya çakışmadan çalışır.

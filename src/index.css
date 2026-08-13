@@ -68,7 +68,7 @@ h2 { margin: 0; font-size: 18px; letter-spacing: .03em; }
 .batarya--iyi { --batarya-renk: var(--accent-green); }
 .batarya--uyari { --batarya-renk: var(--accent-orange); }
 .batarya--kritik { --batarya-renk: var(--accent-red); }
-.batarya__cizim { flex: none; width: 64px; height: 30px; }
+.batarya__cizim { flex: none; width: 72px; height: 30px; }
 .batarya__govde { fill: rgba(5,11,18,.85); stroke: var(--batarya-renk); stroke-width: 2; }
 .batarya__uc { fill: var(--batarya-renk); }
 .batarya__dolum { fill: var(--batarya-renk); transition: width .25s ease, fill .25s ease; }
