@@ -68,14 +68,19 @@ h2 { margin: 0; font-size: 18px; letter-spacing: .03em; }
 .batarya--iyi { --batarya-renk: var(--accent-green); }
 .batarya--uyari { --batarya-renk: var(--accent-orange); }
 .batarya--kritik { --batarya-renk: var(--accent-red); }
-.batarya__cizim { flex: none; width: 40px; height: 18px; }
-.batarya__govde { fill: rgba(11,22,40,.8); stroke: var(--border-panel); stroke-width: 1.5; }
-.batarya__uc { fill: var(--border-panel); }
+.batarya__cizim { flex: none; width: 64px; height: 30px; }
+.batarya__govde { fill: rgba(5,11,18,.85); stroke: var(--batarya-renk); stroke-width: 2; }
+.batarya__uc { fill: var(--batarya-renk); }
 .batarya__dolum { fill: var(--batarya-renk); transition: width .25s ease, fill .25s ease; }
-.batarya__yuzde { color: var(--batarya-renk); font: 700 11px ui-monospace, monospace; }
-.batarya--iyi .batarya__yuzde { text-shadow: 0 0 10px rgba(0,208,132,.35); }
-.batarya--uyari .batarya__yuzde { text-shadow: 0 0 10px rgba(255,138,58,.35); }
-.batarya--kritik .batarya__yuzde { text-shadow: 0 0 10px rgba(255,77,79,.35); }
+/* Yuzde metni bataryanin icinde: dolu kisimda koyu, bos kisimda renkli cizilir. */
+.batarya__yuzde { font: 700 13px ui-monospace, monospace; letter-spacing: .02em; }
+.batarya__yuzde--dolu { fill: var(--bg-main); }
+.batarya__yuzde--bos { fill: var(--batarya-renk); }
+.batarya--iyi .batarya__dolum { filter: drop-shadow(0 0 5px rgba(0,208,132,.45)); }
+.batarya--uyari .batarya__dolum { filter: drop-shadow(0 0 5px rgba(255,138,58,.45)); }
+.batarya--kritik .batarya__dolum { filter: drop-shadow(0 0 5px rgba(255,77,79,.5)); }
+.batarya--veri-yok .batarya__govde { stroke: var(--border-panel); }
+.batarya--veri-yok .batarya__uc { fill: var(--border-panel); }
 .quick-telemetry__batarya { flex: none; justify-items: end; }
 .quick-telemetry__batarya .batarya { letter-spacing: normal; text-transform: none; }
 @media (prefers-reduced-motion: reduce) { .batarya__dolum { transition: none; } }

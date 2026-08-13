@@ -465,7 +465,7 @@ sayımı, itki süreleri, operasyon geçen süre, valf durumları).
 - **Geri sayım kutusu**: `MKUItkiDiagnostikPaket.itkiBaslatmaGeriSayim_sn` negatifken kırmızı `T-`, sıfır veya pozitifken yeşil `T+` olarak gösterilir. Veri yokken `T- --:--`.
 - **Operasyon modu kutusu**: `itkiOpDurumlari` değerinin `OpMod` karşılığını gösterir (BEKLEMEDE / GERİ SAYIM / ATEŞLEME / TAMAMLANDI). Veri yokken `MOD BEKLENİYOR`.
 - **Saatler**: Sistem Saati ve GNSS Saati'nin yanında yerel bilgisayar saatini saniyede bir güncelleyen **Lokal Saat** gösterilir. Hız ve irtifa alanları üst bardan kaldırılmıştır.
-- **Batarya göstergesi**: `MKUItkiDiagnostikPaket.batarya_yuzde` değerini batarya çizimi + yüzde olarak gösterir. Doluluk seviyesine göre renk değiştirir:
+- **Batarya göstergesi**: `MKUItkiDiagnostikPaket.batarya_yuzde` değerini batarya çizimi olarak gösterir; yüzde metni bataryanın **içinde**, dolum çubuğunun üzerinde durur. Doluluk seviyesine göre renk değiştirir:
 
   | Yüzde     | Renk    | Durum sınıfı        |
   | --------- | ------- | ------------------- |
@@ -475,6 +475,8 @@ sayımı, itki süreleri, operasyon geçen süre, valf durumları).
   | veri yok  | gri     | `batarya--veri-yok` |
 
   Eşikler `src/shared/utils/bataryaDurum.ts` içindeki `BATARYA_LIMITLERI` sabitindedir; değiştirmek için tek yeri güncellemek yeterlidir. Bileşen (`src/shared/components/BataryaGostergesi.tsx`) salt görseldir, değeri prop olarak alır ve `limit` prop'uyla farklı eşiklerle de kullanılabilir. Aralık dışı değerler (0 altı / 100 üstü) çizimde sınırlandırılır, `null`/`NaN` geldiğinde gösterge `--%` ve gri olur.
+
+  Yüzde metni okunaklılık için iki kez çizilir ve `clipPath` ile ikiye ayrılır: dolum çubuğunun üzerine denk gelen kısım koyu (`--bg-main`), boş alana denk gelen kısım durum renginde gösterilir. Böylece metin hem %5'te hem %100'de kontrastını korur. `clipPath` kimlikleri `useId` ile üretilir, aynı sayfada birden fazla batarya çakışmadan çalışır.
 
 - **Veri LED'i**: WebSocket'ten herhangi bir mesaj aktığı sürece yeşil yanar; 2 saniye boyunca hiç mesaj gelmezse kırmızıya döner (`connectionStore.dataLive`).
 
