@@ -26,6 +26,12 @@ export type GostergeTanim = {
   /** Beslendiği paket kaynağı; PT/TC-İMU-GNSS paketleri tanımlanınca doldurulacak. */
   kaynakId?: string;
   alanKey?: string;
+  /**
+   * Kartın köşesinde küçük puntoyla gösterilecek maks değerin alan adı
+   * (aynı `kaynakId` paketi içinde, örn. "PT1Maks"). Hesaplama yapılmaz;
+   * paketten gelen değer olduğu gibi gösterilir. Tanımsızsa maks satırı çıkmaz.
+   */
+  maksAlanKey?: string;
   /** Gömülü ihlal limitleri; tanımsız kart limitsiz çalışır. */
   limit?: GostergeLimit;
 };
@@ -62,10 +68,23 @@ export const GOSTERGE_GRUPLARI: GostergeGrup[] = [
   "GNSS",
 ];
 
+/** Paket kaynak kaydının son örneğinden tek bir sayısal alanı okur. */
+function okuKaynakAlan(
+  kaynakId: string | undefined,
+  alanKey: string | undefined,
+): number | undefined {
+  if (!kaynakId || !alanKey) return undefined;
+  const snapshot = getGrafikKaynak(kaynakId)?.getSnapshot();
+  const deger = snapshot?.[alanKey];
+  return typeof deger === "number" && Number.isFinite(deger) ? deger : undefined;
+}
+
 /** Kartın canlı değerini paket kaynak kaydından okur; kaynak bağlı değilse undefined. */
 export function getGostergeDeger(tanim: GostergeTanim): number | undefined {
-  if (!tanim.kaynakId || !tanim.alanKey) return undefined;
-  const snapshot = getGrafikKaynak(tanim.kaynakId)?.getSnapshot();
-  const deger = snapshot?.[tanim.alanKey];
-  return typeof deger === "number" && Number.isFinite(deger) ? deger : undefined;
+  return okuKaynakAlan(tanim.kaynakId, tanim.alanKey);
+}
+
+/** Kartın maks değerini paket kaynak kaydından okur; `maksAlanKey` yoksa undefined. */
+export function getGostergeMaksDeger(tanim: GostergeTanim): number | undefined {
+  return okuKaynakAlan(tanim.kaynakId, tanim.maksAlanKey);
 }

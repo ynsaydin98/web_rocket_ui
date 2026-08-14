@@ -1,6 +1,7 @@
 import { useGrafikVeriStore } from "../../grafik/store/grafikVeriStore";
 import {
   getGostergeDeger,
+  getGostergeMaksDeger,
   type GostergeLimit,
   type GostergeTanim,
 } from "../config/gostergeTanimlari";
@@ -35,10 +36,15 @@ export function GostergeKarti({ tanim }: Props) {
   useGrafikVeriStore((s) => s.versiyon);
   const deger = getGostergeDeger(tanim);
 
+  // Maks değer pakette hazır geliyor; burada hesaplama/biriktirme yapılmaz.
+  const maksDeger = getGostergeMaksDeger(tanim);
+
   const limit = tanim.limit;
   const durum = hesaplaDurum(deger, limit);
   const degerText =
     deger === undefined ? "--" : deger.toFixed(tanim.digit ?? 1);
+  const maksText =
+    maksDeger === undefined ? undefined : maksDeger.toFixed(tanim.digit ?? 1);
   const limitVar =
     limit !== undefined && (limit.min !== undefined || limit.max !== undefined);
 
@@ -56,13 +62,23 @@ export function GostergeKarti({ tanim }: Props) {
           <span className="gosterge-kart__birim">{tanim.birim}</span>
         )}
       </div>
-      {limitVar && (
+      {(limitVar || maksText !== undefined) && (
         <footer className="gosterge-kart__alt">
           <span className="gosterge-kart__limit-etiket">
-            {limit.min !== undefined && `min ${limit.min}`}
-            {limit.min !== undefined && limit.max !== undefined && " · "}
-            {limit.max !== undefined && `maks ${limit.max}`}
+            {limitVar && (
+              <>
+                {limit.min !== undefined && `min ${limit.min}`}
+                {limit.min !== undefined && limit.max !== undefined && " · "}
+                {limit.max !== undefined && `maks ${limit.max}`}
+              </>
+            )}
           </span>
+          {maksText !== undefined && (
+            <span className="gosterge-kart__maks" title="Maksimum değer">
+              Maks: {maksText}
+              {tanim.birim && ` ${tanim.birim}`}
+            </span>
+          )}
         </footer>
       )}
     </section>
