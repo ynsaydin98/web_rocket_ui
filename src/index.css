@@ -181,17 +181,20 @@ h2 { margin: 0; font-size: 18px; letter-spacing: .03em; }
 .grafik-panel__legend-item { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font: 600 10px ui-monospace, monospace; letter-spacing: .04em; }
 .grafik-panel__legend-item strong { color: var(--text-main); font-size: 11px; }
 .grafik-panel__swatch { display: inline-block; width: 10px; height: 3px; border-radius: 2px; }
-.grafik-panel__body { position: relative; flex: 1; min-height: 170px; padding: 8px 10px 4px; }
+.grafik-panel__body { display: grid; grid-template-columns: var(--grafik-eksen-w, 48px) minmax(0, 1fr); flex: 1; min-height: 170px; padding: 8px 10px 4px; }
+.grafik-panel__body--bos { display: grid; grid-template-columns: 1fr; place-items: center; }
+.grafik-panel__y-ekseni { position: relative; }
+.grafik-panel__y-tick { position: absolute; right: 6px; transform: translateY(-50%); color: var(--text-muted); font: 600 10px ui-monospace, monospace; white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums; }
+.grafik-panel__plot { position: relative; min-width: 0; }
 .grafik-panel__svg { display: block; width: 100%; height: 100%; min-height: 158px; }
 .grafik-panel__gridline { stroke: #132330; stroke-width: .5px; }
 .grafik-panel__line { fill: none; stroke-width: 1.6px; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .grafik-panel__crosshair { stroke: rgba(142,163,189,.55); stroke-width: 1px; vector-effect: non-scaling-stroke; stroke-dasharray: 3 3; }
-.grafik-panel__axis { position: absolute; left: 14px; color: var(--text-muted); font: 600 10px ui-monospace, monospace; pointer-events: none; }
-.grafik-panel__axis--max { top: 10px; }
-.grafik-panel__axis--min { bottom: 8px; }
-.grafik-panel__tooltip { position: absolute; top: 10px; right: 14px; padding: 3px 8px; border: 1px solid var(--border-panel); border-radius: 4px; background: rgba(5,11,18,.9); color: var(--text-main); font: 700 11px ui-monospace, monospace; pointer-events: none; }
+.grafik-panel__tooltip { position: absolute; top: 4px; right: 6px; padding: 3px 8px; border: 1px solid var(--border-panel); border-radius: 4px; background: rgba(5,11,18,.9); color: var(--text-main); font: 700 11px ui-monospace, monospace; pointer-events: none; }
 .grafik-panel__empty { display: grid; place-items: center; min-height: 158px; color: var(--text-muted); font: 600 12px ui-monospace, monospace; letter-spacing: .08em; }
-.grafik-panel__meta { display: flex; justify-content: space-between; padding: 2px 14px 8px; color: #526a85; font: 600 10px ui-monospace, monospace; }
+/* X ekseni etiket şeridi: sol boşluk y ekseni sütunu + gövde padding'i kadar. */
+.grafik-panel__x-ekseni { position: relative; height: 13px; margin: 2px 10px 8px calc(var(--grafik-eksen-w, 48px) + 10px); }
+.grafik-panel__x-tick { position: absolute; top: 0; color: #526a85; font: 600 10px ui-monospace, monospace; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .grafik-ekle-kart { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 260px; border: 2px dashed rgba(56,163,255,.4); border-radius: 8px; background: rgba(11,22,40,.35); color: var(--accent-blue); cursor: pointer; transition: border-color .15s ease, background .15s ease; }
 .grafik-ekle-kart:hover { border-color: var(--accent-blue); background: rgba(56,163,255,.08); }
 .grafik-ekle-kart__arti { display: grid; place-items: center; width: 58px; height: 58px; border: 2px solid currentColor; border-radius: 50%; font: 400 38px/1 ui-monospace, monospace; }
@@ -225,7 +228,8 @@ h2 { margin: 0; font-size: 18px; letter-spacing: .03em; }
 .gosterge-kart__deger-satir { display: flex; flex: 1; align-items: baseline; justify-content: center; gap: 10px; min-width: 0; }
 .gosterge-kart__deger { font: 800 58px ui-monospace, monospace; line-height: 1; letter-spacing: .02em; color: var(--text-main); font-variant-numeric: tabular-nums; }
 .gosterge-kart__birim { color: var(--text-muted); font: 700 18px ui-monospace, monospace; }
-.gosterge-kart__alt { display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline; gap: 8px; }
+/* Yan sütunlar minmax(0,1fr): sağdaki maks etiketi orta sütunun ortalamasını bozmaz. */
+.gosterge-kart__alt { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: baseline; gap: 8px; }
 .gosterge-kart__limit-etiket { grid-column: 2; color: var(--text-muted); font: 600 11px ui-monospace, monospace; letter-spacing: .06em; }
 /* Maks değer sağ alt köşede; sol alt köşe için: grid-column: 1; justify-self: start; */
 .gosterge-kart__maks { grid-column: 3; justify-self: end; color: var(--text-muted); font: 600 11px ui-monospace, monospace; letter-spacing: .06em; white-space: nowrap; }
