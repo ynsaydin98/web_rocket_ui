@@ -3,7 +3,7 @@ import type { SeriUdpKopruDurumu } from "../models/seriUdpKopruDurumu";
 import { useSeriUdpKopruStore } from "../store/seriUdpKopruStore";
 
 const KOPRU_ERISIM_HATASI =
-  "Kopru surecine ulasilamadi. Operator bilgisayarinda `npm run kopru` calisiyor mu?";
+  "Koprüye ulaşılamadı. VITE_KOPRU_AKTIF ayarını ve `npm install` sonrası sunucunun yeniden başlatıldığını kontrol edin.";
 
 async function kopruyeIstek(
   yol: string,

@@ -695,8 +695,9 @@ VITE_SERI_BAUD=115200
 VITE_KRIPTO_UDP_IP=127.0.0.1
 VITE_KRIPTO_UDP_PORT=6000
 VITE_KOPRU_UDP_DINLEME_PORT=6001
+VITE_KOPRU_AKTIF=true
 VITE_KOPRU_HTTP_PORT=5050
-VITE_KOPRU_DURUM_URL=http://127.0.0.1:5050
+VITE_KOPRU_DURUM_URL=
 VITE_KOPRU_DURUM_ARALIK_MS=1000
 VITE_KOPRU_YENIDEN_DENEME_MS=3000
 VITE_KOPRU_OTOMATIK_BASLAT=false
@@ -715,7 +716,9 @@ VITE_KOPRU_OTOMATIK_BASLAT=false
 - `VITE_SERI_PORT_YOLU` / `VITE_SERI_BAUD`: seri port ↔ UDP köprüsünün dinleyeceği port (`COM4`, `/dev/ttyUSB0`) ve baud hızı.
 - `VITE_KRIPTO_UDP_IP` / `VITE_KRIPTO_UDP_PORT`: seri porttan okunan ham verinin gönderileceği Kripto servis adresi.
 - `VITE_KOPRU_UDP_DINLEME_PORT`: Kripto servisten gelen (seri porta yazılacak) UDP paketlerinin dinlendiği yerel port.
-- `VITE_KOPRU_HTTP_PORT` / `VITE_KOPRU_DURUM_URL`: köprü sürecinin durum/kontrol ucu ve arayüzün bu uca bağlanma adresi. İkisi aynı portu göstermelidir.
+- `VITE_KOPRU_AKTIF`: `false` ise köprü Vite sunucusuna hiç eklenmez.
+- `VITE_KOPRU_HTTP_PORT`: yalnızca bağımsız çalıştırmada (`npm run kopru`) kullanılan HTTP portu.
+- `VITE_KOPRU_DURUM_URL`: boş bırakılırsa arayüz aynı origin üzerindeki `/__kopru` ucunu kullanır (varsayılan). Köprü bağımsız çalıştırılıyorsa tam adres verilir (`http://127.0.0.1:5050`).
 - `VITE_KOPRU_DURUM_ARALIK_MS`: Hata Ayıklama sayfasının köprü durumunu yoklama aralığı.
 - `VITE_KOPRU_YENIDEN_DENEME_MS`: seri port kapanınca yeniden açma denemesi gecikmesi.
 - `VITE_KOPRU_OTOMATIK_BASLAT`: `true` ise köprü süreci açılır açılmaz seri portu dinlemeye başlar.
@@ -732,9 +735,11 @@ Seri Port ──UDP──> Kripto Servis ──> HAM2VERI Servisi ──WebSocke
 Seri Port <──────────────────────UDP── Kripto Servis
 ```
 
-Tarayıcı UDP soketi açamaz ve seri portu ham olarak okuyamaz. Bu yüzden
-köprü, arayüzün içinde değil, operatör bilgisayarında çalışan ayrı bir Node
-sürecidir: `scripts/seriUdpKopru.mjs` (`npm run kopru`).
+Tarayıcı UDP soketi açamaz ve seri portu ham olarak okuyamaz. Bu yüzden köprü
+tarayıcıda değil, Node tarafında çalışır. Köprü bir Vite eklentisi olarak
+sunucunun içine gömülüdür (`scripts/kopru/kopruVitePlugin.mjs`): `npm run dev`
+veya `npm run preview` ile birlikte ayağa kalkar, ayrıca bir komut
+çalıştırmak gerekmez. `VITE_KOPRU_AKTIF=false` ile tamamen kapatılabilir.
 
 Köprünün yaptığı iş:
 
@@ -743,14 +748,17 @@ Köprünün yaptığı iş:
 - `VITE_KOPRU_UDP_DINLEME_PORT` portuna gelen UDP paketlerinin içeriğini
   doğrudan seri porta yazar.
 - Seri port kapanırsa `VITE_KOPRU_YENIDEN_DENEME_MS` aralığıyla yeniden açmayı dener.
-- Yalnızca `127.0.0.1` üzerinde dinleyen küçük bir HTTP ucu açar:
+- Arayüzle aynı origin üzerinde `/__kopru` altında küçük bir kontrol ucu sunar:
 
 | Uç | Yöntem | Açıklama |
 | --- | --- | --- |
-| `/durum` | GET | Köprü durumu, adresler ve bayt/paket sayaçları |
-| `/portlar` | GET | Bilgisayarda görünen seri portların listesi |
-| `/baslat` | POST | Köprüyü başlatır |
-| `/durdur` | POST | Köprüyü durdurur |
+| `/__kopru/durum` | GET | Köprü durumu, adresler ve bayt/paket sayaçları |
+| `/__kopru/portlar` | GET | Bilgisayarda görünen seri portların listesi |
+| `/__kopru/baslat` | POST | Köprüyü başlatır |
+| `/__kopru/durdur` | POST | Köprüyü durdurur |
+
+`serialport` paketi yerel derlemeli olduğu için dinamik yüklenir: kurulu
+değilse dev sunucusu çökmez, panelde `npm install` uyarısı görünür.
 
 Adresler ve port ayarları `.env` üzerinden verilir; aynı değerleri hem köprü
 süreci hem de arayüz (`src/app/appConfig.ts`) okur.
@@ -758,13 +766,30 @@ süreci hem de arayüz (`src/app/appConfig.ts`) okur.
 Arayüz tarafında `/debug` sayfasındaki **Seri Port - UDP Köprüsü** paneli bu
 durum ucunu `VITE_KOPRU_DURUM_ARALIK_MS` aralığıyla yoklar; seri port/hedef
 adres bilgisini, iki yöndeki sayaçları ve hataları gösterir. Başlat/Durdur
-düğmeleri admin yetkisi ister. Köprü süreci çalışmıyorsa panel "KÖPRÜ YOK"
-durumunda kalır, arayüzün geri kalanı etkilenmez.
+düğmeleri admin yetkisi ister. Köprü kapalıysa panel "KÖPRÜ YOK" durumunda
+kalır, arayüzün geri kalanı etkilenmez.
+
+### Bağımsız Çalıştırma (opsiyonel)
+
+Üretim derlemesi Vite dışında bir sunucudan yayınlanıyorsa köprü ayrı bir
+süreç olarak da çalıştırılabilir:
+
+```bash
+npm run kopru
+```
+
+Bu modda köprü `VITE_KOPRU_HTTP_PORT` üzerinde kendi HTTP sunucusunu açar ve
+uçlar `/__kopru` öneki olmadan (`/durum`, `/baslat`, ...) sunulur. Arayüzün bu
+sürece bağlanması için `VITE_KOPRU_DURUM_URL=http://127.0.0.1:5050`
+verilmelidir.
 
 İlgili dosyalar:
 
 ```text
-scripts/seriUdpKopru.mjs                              # Node köprü süreci (serialport + dgram)
+scripts/kopru/kopruAyarlari.mjs                       # .env okuma
+scripts/kopru/seriUdpKopru.mjs                        # köprü çekirdeği (serialport + dgram)
+scripts/kopru/kopruVitePlugin.mjs                     # dev/preview sunucusuna gömme
+scripts/seriUdpKopru.mjs                              # bağımsız çalıştırma girişi (npm run kopru)
 src/features/debug/models/seriUdpKopruDurumu.ts       # durum modeli
 src/features/debug/services/seriUdpKopruService.ts    # HTTP istekleri + durum yoklama
 src/features/debug/store/seriUdpKopruStore.ts         # Zustand köprü durumu
@@ -777,8 +802,11 @@ src/features/debug/components/SeriUdpKopruPanel.tsx   # /debug paneli
 npm install
 npm run dev     # geliştirme
 npm run build   # üretim derlemesi
-npm run kopru   # seri port <-> UDP köprüsü (ayrı terminal, gerektiğinde)
+npm run kopru   # seri port <-> UDP köprüsünü ayrı süreç olarak çalıştırır (opsiyonel)
 ```
+
+`npm run dev` seri port ↔ UDP köprüsünü de başlatır; `npm run kopru` yalnızca
+köprü Vite dışında çalıştırılacaksa gereklidir.
 
 Canlı video için ayrıca `FERGANI_HAM2VERI_SERVIS` servisinin çalışıyor ve video
 alt sisteminin açık (`Ham2Veri:Video:Aktif = true`) olması gerekir. Arayüz o
