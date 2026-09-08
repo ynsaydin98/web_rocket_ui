@@ -404,7 +404,7 @@ Ortak görsel bileşenler ve sayfa componentleri. Sayfalar yalnızca feature/sha
 /gostergeler   Göstergeler (büyük puntolu değer kartları + duruş kadranları)
 /flight-termination  Uçuş Sonlandırma (FTS karar ekranı: PT/TC sensör kutuları)
 /video         Kamera (roketten gelen S-band canlı video yayını)
-/debug         Hata ayıklama konsolu (ham WebSocket mesajları)
+/debug         Hata ayıklama konsolu (ham WebSocket mesajları + seri port ↔ UDP köprüsü)
 ```
 
 ## Göstergeler Sayfası
@@ -690,6 +690,16 @@ VITE_DEBUG_UI_PUBLISH_INTERVAL_MS=1000
 VITE_DEBUG_RAW_MESSAGE_LIMIT=100
 VITE_WS_RECONNECT_DELAY_MS=3000
 VITE_VIDEO_UI_PUBLISH_INTERVAL_MS=1000
+VITE_SERI_PORT_YOLU=
+VITE_SERI_BAUD=115200
+VITE_KRIPTO_UDP_IP=127.0.0.1
+VITE_KRIPTO_UDP_PORT=6000
+VITE_KOPRU_UDP_DINLEME_PORT=6001
+VITE_KOPRU_HTTP_PORT=5050
+VITE_KOPRU_DURUM_URL=http://127.0.0.1:5050
+VITE_KOPRU_DURUM_ARALIK_MS=1000
+VITE_KOPRU_YENIDEN_DENEME_MS=3000
+VITE_KOPRU_OTOMATIK_BASLAT=false
 ```
 
 - `VITE_WS_URL`: telemetri/komut WebSocket bağlantı adresi.
@@ -702,8 +712,64 @@ VITE_VIDEO_UI_PUBLISH_INTERVAL_MS=1000
 - `VITE_*_INTERVAL_MS`: publisher yayın aralıkları.
 - `VITE_WS_RECONNECT_DELAY_MS`: bağlantı koptuğunda yeniden deneme gecikmesi (telemetri ve video kanalları için ortak).
 - `VITE_VIDEO_UI_PUBLISH_INTERVAL_MS`: video istatistiklerinin (fps, bit hızı, kare sayacı) store'a yazılma aralığı.
+- `VITE_SERI_PORT_YOLU` / `VITE_SERI_BAUD`: seri port ↔ UDP köprüsünün dinleyeceği port (`COM4`, `/dev/ttyUSB0`) ve baud hızı.
+- `VITE_KRIPTO_UDP_IP` / `VITE_KRIPTO_UDP_PORT`: seri porttan okunan ham verinin gönderileceği Kripto servis adresi.
+- `VITE_KOPRU_UDP_DINLEME_PORT`: Kripto servisten gelen (seri porta yazılacak) UDP paketlerinin dinlendiği yerel port.
+- `VITE_KOPRU_HTTP_PORT` / `VITE_KOPRU_DURUM_URL`: köprü sürecinin durum/kontrol ucu ve arayüzün bu uca bağlanma adresi. İkisi aynı portu göstermelidir.
+- `VITE_KOPRU_DURUM_ARALIK_MS`: Hata Ayıklama sayfasının köprü durumunu yoklama aralığı.
+- `VITE_KOPRU_YENIDEN_DENEME_MS`: seri port kapanınca yeniden açma denemesi gecikmesi.
+- `VITE_KOPRU_OTOMATIK_BASLAT`: `true` ise köprü süreci açılır açılmaz seri portu dinlemeye başlar.
 
 Ortam değişkeni değiştirildikten sonra Vite geliştirme sunucusu yeniden başlatılmalıdır.
+
+## Seri Port ↔ UDP Köprüsü (Kripto Servis Bağlantısı)
+
+Roketten seri port üzerinden gelen ham veri, kriptolu olduğu için doğrudan
+arayüze verilmez. Zincir şöyledir:
+
+```text
+Seri Port ──UDP──> Kripto Servis ──> HAM2VERI Servisi ──WebSocket──> Arayüz
+Seri Port <──────────────────────UDP── Kripto Servis
+```
+
+Tarayıcı UDP soketi açamaz ve seri portu ham olarak okuyamaz. Bu yüzden
+köprü, arayüzün içinde değil, operatör bilgisayarında çalışan ayrı bir Node
+sürecidir: `scripts/seriUdpKopru.mjs` (`npm run kopru`).
+
+Köprünün yaptığı iş:
+
+- Seri porttan okunan baytları olduğu gibi `VITE_KRIPTO_UDP_IP:VITE_KRIPTO_UDP_PORT`
+  adresine UDP ile gönderir (ek çerçeveleme/başlık eklenmez).
+- `VITE_KOPRU_UDP_DINLEME_PORT` portuna gelen UDP paketlerinin içeriğini
+  doğrudan seri porta yazar.
+- Seri port kapanırsa `VITE_KOPRU_YENIDEN_DENEME_MS` aralığıyla yeniden açmayı dener.
+- Yalnızca `127.0.0.1` üzerinde dinleyen küçük bir HTTP ucu açar:
+
+| Uç | Yöntem | Açıklama |
+| --- | --- | --- |
+| `/durum` | GET | Köprü durumu, adresler ve bayt/paket sayaçları |
+| `/portlar` | GET | Bilgisayarda görünen seri portların listesi |
+| `/baslat` | POST | Köprüyü başlatır |
+| `/durdur` | POST | Köprüyü durdurur |
+
+Adresler ve port ayarları `.env` üzerinden verilir; aynı değerleri hem köprü
+süreci hem de arayüz (`src/app/appConfig.ts`) okur.
+
+Arayüz tarafında `/debug` sayfasındaki **Seri Port - UDP Köprüsü** paneli bu
+durum ucunu `VITE_KOPRU_DURUM_ARALIK_MS` aralığıyla yoklar; seri port/hedef
+adres bilgisini, iki yöndeki sayaçları ve hataları gösterir. Başlat/Durdur
+düğmeleri admin yetkisi ister. Köprü süreci çalışmıyorsa panel "KÖPRÜ YOK"
+durumunda kalır, arayüzün geri kalanı etkilenmez.
+
+İlgili dosyalar:
+
+```text
+scripts/seriUdpKopru.mjs                              # Node köprü süreci (serialport + dgram)
+src/features/debug/models/seriUdpKopruDurumu.ts       # durum modeli
+src/features/debug/services/seriUdpKopruService.ts    # HTTP istekleri + durum yoklama
+src/features/debug/store/seriUdpKopruStore.ts         # Zustand köprü durumu
+src/features/debug/components/SeriUdpKopruPanel.tsx   # /debug paneli
+```
 
 ## Kurulum ve Çalıştırma
 
@@ -711,6 +777,7 @@ Ortam değişkeni değiştirildikten sonra Vite geliştirme sunucusu yeniden ba�
 npm install
 npm run dev     # geliştirme
 npm run build   # üretim derlemesi
+npm run kopru   # seri port <-> UDP köprüsü (ayrı terminal, gerektiğinde)
 ```
 
 Canlı video için ayrıca `FERGANI_HAM2VERI_SERVIS` servisinin çalışıyor ve video

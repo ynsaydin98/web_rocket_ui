@@ -572,3 +572,14 @@ h2 { margin: 0; font-size: 18px; letter-spacing: .03em; }
 .video-stage__overlay-detail { z-index: 1; max-width: 46ch; color: var(--text-muted); font: 10px/1.6 ui-monospace, monospace; }
 .video-stage__stats { margin-top: 12px; }
 @media (max-width: 780px) { .video-panel__badges { justify-content: flex-end; } }
+
+.kopru-panel { display: grid; gap: 14px; }
+.kopru-panel__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0; }
+.kopru-panel__grid > div { padding: 10px 12px; border: 1px solid rgba(36,64,97,.65); background: rgba(5,11,18,.4); }
+.kopru-panel__grid dt { color: var(--text-muted); font: 700 9px ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; }
+.kopru-panel__grid dd { margin: 6px 0 0; color: var(--text-main); font: 11px ui-monospace, monospace; word-break: break-all; }
+.kopru-panel__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.kopru-panel__actions .button:disabled { opacity: .45; cursor: not-allowed; }
+.kopru-panel__actions .muted-copy { font: 10px ui-monospace, monospace; }
+@media (max-width: 900px) { .kopru-panel__grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 620px) { .kopru-panel__grid { grid-template-columns: 1fr; } }

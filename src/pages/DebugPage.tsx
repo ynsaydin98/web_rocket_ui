@@ -1,6 +1,7 @@
 import { AdminLoginPanel } from "../features/debug/components/AdminLoginPanel";
 import { ConnectionStatus } from "../features/debug/components/ConnectionStatus";
 import { RawMessageViewer } from "../features/debug/components/RawMessageViewer";
+import { SeriUdpKopruPanel } from "../features/debug/components/SeriUdpKopruPanel";
 export function DebugPage() {
   return (
     <div className="page-stack">
@@ -12,6 +13,7 @@ export function DebugPage() {
       </header>
       <AdminLoginPanel />
       <ConnectionStatus />
+      <SeriUdpKopruPanel />
       <RawMessageViewer />
     </div>
   );

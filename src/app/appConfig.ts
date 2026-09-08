@@ -53,4 +53,13 @@ export const appConfig = {
     import.meta.env.VITE_VIDEO_UI_PUBLISH_INTERVAL_MS,
     1000,
   ),
+  // Seri port <-> UDP koprusu operator bilgisayarinda ayri bir Node sureci
+  // olarak calisir (scripts/seriUdpKopru.mjs). Arayuz yalnizca bu surecin
+  // localhost durum ucunu okur ve baslat/durdur ister.
+  kopruDurumUrl:
+    import.meta.env.VITE_KOPRU_DURUM_URL ?? "http://127.0.0.1:5050",
+  kopruDurumAralikMs: readPositiveNumberEnv(
+    import.meta.env.VITE_KOPRU_DURUM_ARALIK_MS,
+    1000,
+  ),
 } as const;
